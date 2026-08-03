@@ -1,5 +1,5 @@
 ---
-title: Drew Coffman
+title: Isabel Dong
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -18,10 +18,10 @@ title: Drew Coffman
   <div class="container">
     <header class="fade-in">
       <div class="header-left">
-        <div class="site-title"><a href="/">Drew Coffman</a></div>
+        <div class="site-title"><a href="/">Isabel Dong</a></div>
         <nav>
           <a href="#about">About</a>
-          <a href="#writing">Writing</a>
+          <a href="#projects">Projects</a>
           <a href="#shelf">Shelf</a>
         </nav>
       </div>
@@ -60,13 +60,14 @@ title: Drew Coffman
         </ul>
       </div>
 
-      <div class="writing-section fade-in" id="writing">
-        <h2 class="section-title">Writing</h2>
-        <ul class="writing-list">
-          {%- for item in writing %}
+      <div class="projects-section fade-in" id="projects">
+        <h2 class="section-title">Projects</h2>
+        <ul class="projects-list">
+          {%- for item in projects %}
           <li>
-            <a href="{{ item.url }}">{{ item.title }}</a>
-            <div class="source">{{ item.source }} · {{ item.year }}</div>
+            {% if item.url %}<a href="{{ item.url }}" target="_blank">{{ item.title }}</a>{% else %}<span class="project-title">{{ item.title }}</span>{% endif %}
+            <div class="description">{{ item.description }}</div>
+            <div class="source">{{ item.source }}{% if item.year %} · {{ item.year }}{% endif %}</div>
           </li>
           {%- endfor %}
         </ul>
@@ -144,9 +145,6 @@ title: Drew Coffman
 
     <footer>
       <div>thx for reading</div>
-      <div class="social-links">
-        <a href="https://x.com/drewcoffman" target="_blank">Twitter/X</a>
-      </div>
     </footer>
     
     <button class="scroll-top" id="scrollTop" onclick="scrollToTop()">↑</button>

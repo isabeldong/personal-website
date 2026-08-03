@@ -184,29 +184,34 @@ nav {
   left: 0;
 }
 
-/* Writing Section */
-.writing-list {
+/* Projects Section */
+.projects-list {
   list-style: none;
 }
 
-.writing-list li {
+.projects-list li {
   padding: 12px 0;
   border-bottom: 1px dashed #2d8a2d;
 }
 
-.dark-mode .writing-list li {
+.dark-mode .projects-list li {
   border-color: #4ade4a;
 }
 
-.writing-list li:last-child {
+.projects-list li:last-child {
   border-bottom: none;
 }
 
-.writing-list a {
+.projects-list a,
+.projects-list .project-title {
   display: block;
 }
 
-.writing-list .source {
+.projects-list .description {
+  margin-top: 4px;
+}
+
+.projects-list .source {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;

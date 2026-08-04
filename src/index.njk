@@ -93,17 +93,11 @@ title: Isabel Dong
           <span class="book-count" id="book-count"></span>
         </div>
         
-        <div class="year-label">2026</div>
-        <div class="book-grid" id="books-2026"></div>
+        <div class="shelf-group-label" data-books-group="current">Currently Reading</div>
+        <div class="book-grid" id="books-current"></div>
 
-        <div class="year-label">2025</div>
-        <div class="book-grid" id="books-2025"></div>
-
-        <div class="year-label">2024</div>
-        <div class="book-grid" id="books-2024"></div>
-
-        <div class="year-label">2023</div>
-        <div class="book-grid" id="books-2023"></div>
+        <div class="shelf-group-label" data-books-group="finished">Finished</div>
+        <div class="book-grid" id="books-finished"></div>
       </div>
 
       <div class="tab-content" id="tab-movies">
@@ -118,16 +112,16 @@ title: Isabel Dong
           <span class="book-count" id="movie-count"></span>
         </div>
         
-        <div class="year-label movie-year">2026</div>
+        <div class="shelf-group-label movie-year">2026</div>
         <div class="movie-grid" id="movies-2026"></div>
 
-        <div class="year-label movie-year">2025</div>
+        <div class="shelf-group-label movie-year">2025</div>
         <div class="movie-grid" id="movies-2025"></div>
 
-        <div class="year-label movie-year">2024</div>
+        <div class="shelf-group-label movie-year">2024</div>
         <div class="movie-grid" id="movies-2024"></div>
 
-        <div class="year-label movie-year">2023</div>
+        <div class="shelf-group-label movie-year">2023</div>
         <div class="movie-grid" id="movies-2023"></div>
       </div>
 
@@ -296,9 +290,9 @@ title: Isabel Dong
         }
       });
 
-      document.querySelectorAll('#tab-books .year-label').forEach(label => {
-        const year = label.textContent;
-        const grid = document.getElementById(`books-${year}`);
+      document.querySelectorAll('#tab-books .shelf-group-label').forEach(label => {
+        const group = label.dataset.booksGroup;
+        const grid = document.getElementById(`books-${group}`);
         if (grid && grid.children.length === 0) {
           label.style.display = 'none';
           grid.style.display = 'none';
@@ -692,8 +686,7 @@ title: Isabel Dong
       loadTheme();
       populateBooks();
       updateBookCount();
-      populateMovies();
-      updateMovieCount();
+      filterAndDisplayMovies();
       populateEssays();
       updateEssayCount();
     });

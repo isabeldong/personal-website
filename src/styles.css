@@ -224,7 +224,7 @@ nav {
   margin-bottom: 80px;
 }
 
-.year-label {
+.shelf-group-label {
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -233,7 +233,7 @@ nav {
   margin-top: 40px;
 }
 
-.year-label:first-of-type {
+.shelf-group-label:first-of-type {
   margin-top: 0;
 }
 

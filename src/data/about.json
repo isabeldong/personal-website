@@ -6,7 +6,7 @@
       "linkText": "databricks"
     },
     {
-      "text": "studying cs + business @",
+      "text": "cs + business @",
       "link": "https://www.berkeley.edu/",
       "linkText": "uc berkeley"
     },
@@ -23,9 +23,14 @@
       "linkText": "amazon"
     }
   ],
-  "lore": [
-    {
-      "html": "huge fan of women's basketball"
-    }
-  ]
+  "lore": {
+    "intro": "huge fan of:",
+    "items": [
+      "women's basketball",
+      "snoopy",
+      "puzzle games (nyt connections, minute cryptic, baba is you)",
+      "collecting smiskis",
+      "sneaking onto tennis courts to play pickleball"
+    ]
+  }
 }

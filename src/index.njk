@@ -6,7 +6,7 @@ permalink: /index.html
 ---
 <main>
   <div class="hero-image fade-in">
-    <img src="images/header.jpeg" alt="">
+    <img src="images/isabel-header.png" alt="">
   </div>
 
   <div class="page-content home-content fade-in">
@@ -28,9 +28,10 @@ permalink: /index.html
       </ul>
 
       <p class="label">//lore//</p>
+      <p class="lore-intro">{{ about.lore.intro }}</p>
       <ul>
-        {%- for item in about.lore %}
-        <li>{% if item.html %}{{ item.html | safe }}{% else %}<a href="{{ item.link }}">{{ item.linkText }}</a>{% endif %}</li>
+        {%- for item in about.lore.items %}
+        <li>{{ item }}</li>
         {%- endfor %}
       </ul>
     </section>

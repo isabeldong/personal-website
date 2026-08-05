@@ -207,6 +207,10 @@ nav a[aria-current="page"] {
   margin-bottom: 4px;
 }
 
+.about-section .lore-intro {
+  margin-bottom: 4px;
+}
+
 .about-section ul {
   list-style: none;
   margin-bottom: 24px;

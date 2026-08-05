@@ -1,0 +1,22 @@
+[
+  {
+    "organization": "Databricks",
+    "role": "Product Management Intern",
+    "description": "Drove end-to-end product definition of data lifecycle management feature; conducted 25+ customer interviews, competitive and data analyses, and CUJs to align engineering, PM, and executive stakeholders"
+  },
+  {
+    "organization": "UC Berkeley Electrical Engineering & Computer Sciences (EECS)",
+    "role": "Teaching Assistant - CS 61B: Data Structures",
+    "description": "Teach weekly discussion section and lead CS 47B admin team; hold office hours, answer forum questions, and QA, proctor, and grade exams for 1200+ students"
+  },
+  {
+    "organization": "Amazon",
+    "role": "Software Development Engineer Intern",
+    "description": "Developed interactive, real-time facility heat map based on bin utilization by creating AJAX calls and custom UI to render 300K+ datapoints with sub-5s load time and dynamic re-rendering based on user-selected filters"
+  },
+  {
+    "organization": "Various Companies",
+    "role": "Consultant",
+    "description": "Adobe, Electronic Arts, Best Buy, Cal WBB, Bleacher Report + Mercedes-Benz, Samsung, Tesla, UNICEF"
+  }
+]

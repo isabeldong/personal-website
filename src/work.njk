@@ -1,78 +1,97 @@
 ---
+layout: base.njk
 title: Work | Isabel Dong
+pageKey: work
 permalink: /work/index.html
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title }}</title>
-  <base href="/">
-  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="page-wrapper" id="page-wrapper">
-  <div class="container">
-    <header class="fade-in">
-      <div class="header-left">
-        <div class="site-title"><a href="/">Isabel Dong</a></div>
-        <nav>
-          <a href="/">Home</a>
-          <a href="/work/" aria-current="page">Work</a>
-          <a href="/shelf/">Shelf</a>
-        </nav>
+<main class="page-content work-content fade-in">
+  <h1 class="page-title">Work</h1>
+
+  <div class="work-grid">
+    <section class="work-column">
+      <h2 class="work-column-title">//experience//</h2>
+      <ul class="work-list experience-list">
+        {%- for item in experience %}
+        <li>
+          <button class="experience-trigger" type="button" aria-haspopup="dialog" onclick="openExperienceModal(experience[{{ loop.index0 }}], this)">
+            <span class="work-item-title">{{ item.organization }}</span>
+            <span class="work-item-description">{{ item.role }}</span>
+            <span class="experience-open" aria-hidden="true">+</span>
+          </button>
+        </li>
+        {%- endfor %}
+      </ul>
+    </section>
+
+    <section class="work-column">
+      <h2 class="work-column-title">//projects//</h2>
+      <ul class="work-list projects-list">
+        {%- for item in projects %}
+        <li>
+          {% if item.url %}<a class="work-item-title" href="{{ item.url }}" target="_blank">{{ item.title }}</a>{% else %}<span class="work-item-title">{{ item.title }}</span>{% endif %}
+          <div class="work-item-description">{{ item.description }}</div>
+          <div class="work-item-meta work-item-meta-uppercase">{{ item.source }}{% if item.year %} · {{ item.year }}{% endif %}</div>
+        </li>
+        {%- endfor %}
+      </ul>
+    </section>
+
+    <section class="work-column coursework-column">
+      <h2 class="work-column-title">//coursework//</h2>
+      <div class="coursework-groups">
+        {%- for group in coursework %}
+        <section class="coursework-group">
+          <h3 class="coursework-group-title">{{ group.category }}</h3>
+          <ul class="work-list coursework-list">
+            {%- for course in group.courses %}
+            <li>
+              <span class="work-item-title">{% if course.inProgress %}*{% endif %}{{ course.code }}</span>
+              <div class="course-title">{{ course.title }}</div>
+            </li>
+            {%- endfor %}
+          </ul>
+        </section>
+        {%- endfor %}
       </div>
-      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
-        <span class="theme-icon">☀</span>
-      </button>
-    </header>
-
-    <main class="page-content work-content fade-in">
-      <section class="projects-section">
-        <h1 class="section-title">Projects</h1>
-        <ul class="projects-list">
-          {%- for item in projects %}
-          <li>
-            {% if item.url %}<a href="{{ item.url }}" target="_blank">{{ item.title }}</a>{% else %}<span class="project-title">{{ item.title }}</span>{% endif %}
-            <div class="description">{{ item.description }}</div>
-            <div class="source">{{ item.source }}{% if item.year %} · {{ item.year }}{% endif %}</div>
-          </li>
-          {%- endfor %}
-        </ul>
-      </section>
-    </main>
-
-    <footer>
-      <div>thx for reading</div>
-    </footer>
+      <p class="coursework-legend">* = In Progress</p>
+    </section>
   </div>
+</main>
+
+<div class="modal-overlay" id="experience-modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="experience-modal-title">
+    <button class="modal-close" id="experience-modal-close" type="button" onclick="closeExperienceModal()" aria-label="Close experience details">×</button>
+    <div class="modal-title" id="experience-modal-title"></div>
+    <div class="modal-author" id="experience-modal-role"></div>
+    <div class="modal-review" id="experience-modal-description"></div>
   </div>
+</div>
 
-  <script>
-    function toggleTheme() {
-      const wrapper = document.getElementById('page-wrapper');
-      const nextTheme = wrapper.classList.contains('dark-mode') ? 'light' : 'dark';
-      wrapper.classList.toggle('dark-mode', nextTheme === 'dark');
-      localStorage.setItem('theme', nextTheme);
-      updateThemeIcon(nextTheme);
-    }
+<script>
+  const experience = {{ experience | dump | safe }};
+  let lastExperienceTrigger = null;
 
-    function updateThemeIcon(theme) {
-      document.querySelector('.theme-icon').textContent = theme === 'dark' ? '☽' : '☀';
-    }
+  function openExperienceModal(item, trigger) {
+    lastExperienceTrigger = trigger;
+    document.getElementById('experience-modal-title').textContent = item.organization;
+    document.getElementById('experience-modal-role').textContent = item.role;
+    document.getElementById('experience-modal-description').textContent = item.description || 'Description coming soon.';
+    document.getElementById('experience-modal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('experience-modal-close').focus();
+  }
 
-    function loadTheme() {
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      document.getElementById('page-wrapper').classList.toggle('dark-mode', savedTheme === 'dark');
-      updateThemeIcon(savedTheme);
-    }
+  function closeExperienceModal() {
+    document.getElementById('experience-modal').classList.remove('active');
+    document.body.style.overflow = '';
+    if (lastExperienceTrigger) lastExperienceTrigger.focus();
+  }
 
-    document.addEventListener('DOMContentLoaded', loadTheme);
-  </script>
-</body>
-</html>
+  document.getElementById('experience-modal').addEventListener('click', function(event) {
+    if (event.target === this) closeExperienceModal();
+  });
+
+  document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') closeExperienceModal();
+  });
+</script>

@@ -1,38 +1,10 @@
 ---
+layout: base.njk
 title: Shelf | Isabel Dong
+pageKey: shelf
 permalink: /shelf/index.html
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title }}</title>
-  <base href="/">
-  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-  <div class="page-wrapper" id="page-wrapper">
-  <div class="container">
-    <header class="fade-in">
-      <div class="header-left">
-        <div class="site-title"><a href="/">Isabel Dong</a></div>
-        <nav>
-          <a href="/">Home</a>
-          <a href="/work/">Work</a>
-          <a href="/shelf/" aria-current="page">Shelf</a>
-        </nav>
-      </div>
-      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
-        <span class="theme-icon">☀</span>
-      </button>
-    </header>
-
-    <main>
+<main>
     <section class="bookshelf-section fade-in">
       <h1 class="page-title">Shelf</h1>
       <div class="shelf-tabs">
@@ -98,10 +70,6 @@ permalink: /shelf/index.html
     </section>
     </main>
 
-    <footer>
-      <div>thx for reading</div>
-    </footer>
-
     <button class="scroll-top" id="scrollTop" onclick="scrollToTop()">↑</button>
 
     <!-- Book Modal -->
@@ -125,43 +93,12 @@ permalink: /shelf/index.html
         <div class="modal-review" id="movie-modal-review"></div>
       </div>
     </div>
-  </div>
-  </div>
 
   <script>
     // Data from JSON files (injected at build time)
     const books = {{ books | dump | safe }};
     const movies = {{ movies | dump | safe }};
     const essays = {{ essays | dump | safe }};
-
-    // Theme toggle
-    function toggleTheme() {
-      const wrapper = document.getElementById('page-wrapper');
-      const isDark = wrapper.classList.contains('dark-mode');
-
-      if (isDark) {
-        wrapper.classList.remove('dark-mode');
-        localStorage.setItem('theme', 'light');
-        updateThemeIcon('light');
-      } else {
-        wrapper.classList.add('dark-mode');
-        localStorage.setItem('theme', 'dark');
-        updateThemeIcon('dark');
-      }
-    }
-
-    function updateThemeIcon(theme) {
-      const icon = document.querySelector('.theme-icon');
-      icon.textContent = theme === 'dark' ? '☽' : '☀';
-    }
-
-    function loadTheme() {
-      const savedTheme = localStorage.getItem('theme') || 'light';
-      if (savedTheme === 'dark') {
-        document.getElementById('page-wrapper').classList.add('dark-mode');
-      }
-      updateThemeIcon(savedTheme);
-    }
 
     // Tab switching
     function switchTab(tab) {
@@ -644,7 +581,6 @@ permalink: /shelf/index.html
 
     // Initialize
     document.addEventListener('DOMContentLoaded', () => {
-      loadTheme();
       populateBooks();
       updateBookCount();
       filterAndDisplayMovies();
@@ -652,5 +588,3 @@ permalink: /shelf/index.html
       updateEssayCount();
     });
   </script>
-</body>
-</html>

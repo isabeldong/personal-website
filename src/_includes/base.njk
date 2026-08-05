@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <base href="/">
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-wrapper" id="page-wrapper">
+    <div class="container">
+      <header class="fade-in">
+        <div class="header-left">
+          <div class="site-title"><a href="/">Isabel Dong</a></div>
+          <nav>
+            <a href="/"{% if pageKey == "home" %} aria-current="page"{% endif %}>Home</a>
+            <a href="/work/"{% if pageKey == "work" %} aria-current="page"{% endif %}>Work</a>
+            <a href="/shelf/"{% if pageKey == "shelf" %} aria-current="page"{% endif %}>Shelf</a>
+          </nav>
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+          <span class="theme-icon">☀</span>
+        </button>
+      </header>
+
+      {{ content | safe }}
+
+      <footer>
+        <div>thx for reading</div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const wrapper = document.getElementById('page-wrapper');
+      const nextTheme = wrapper.classList.contains('dark-mode') ? 'light' : 'dark';
+      wrapper.classList.toggle('dark-mode', nextTheme === 'dark');
+      localStorage.setItem('theme', nextTheme);
+      updateThemeIcon(nextTheme);
+    }
+
+    function updateThemeIcon(theme) {
+      document.querySelector('.theme-icon').textContent = theme === 'dark' ? '☽' : '☀';
+    }
+
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.getElementById('page-wrapper').classList.toggle('dark-mode', savedTheme === 'dark');
+      updateThemeIcon(savedTheme);
+    }
+
+    loadTheme();
+  </script>
+</body>
+</html>

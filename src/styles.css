@@ -4,10 +4,18 @@
   box-sizing: border-box;
 }
 
+:root {
+  --font-size-title: 16px;
+  --font-size-heading: 13px;
+  --font-size-subheading: 12px;
+  --font-size-body: 13px;
+  --font-size-meta: 11px;
+}
+
 body {
   font-family: 'IBM Plex Mono', monospace;
   line-height: 1.6;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 
 .page-wrapper {
@@ -61,7 +69,7 @@ header {
 }
 
 .site-title {
-  font-size: 14px;
+  font-size: var(--font-size-heading);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -74,7 +82,7 @@ header {
 nav {
   display: flex;
   gap: 24px;
-  font-size: 12px;
+  font-size: var(--font-size-subheading);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -145,21 +153,21 @@ nav a[aria-current="page"] {
   }
 }
 
-.section-title {
-  font-size: 14px;
+.section-title,
+.page-title {
+  font-size: var(--font-size-title);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.section-title {
   margin-bottom: 24px;
   padding-bottom: 12px;
   border-bottom: 1px solid #2d8a2d;
 }
 
 .page-title {
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   margin-bottom: 32px;
 }
 
@@ -174,7 +182,7 @@ nav a[aria-current="page"] {
 }
 
 .work-content {
-  max-width: 900px;
+  width: 100%;
 }
 
 .dark-mode .section-title {
@@ -186,10 +194,15 @@ nav a[aria-current="page"] {
   margin-bottom: 16px;
 }
 
-.about-section .label {
-  font-size: 12px;
+.about-section .label,
+.work-column-title {
+  font-size: var(--font-size-heading);
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.about-section .label {
   opacity: 0.7;
   margin-bottom: 4px;
 }
@@ -211,39 +224,151 @@ nav a[aria-current="page"] {
   left: 0;
 }
 
-/* Projects Section */
-.projects-list {
+/* Work Page */
+.work-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px;
+  align-items: start;
+}
+
+.work-column-title {
+  opacity: 0.7;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #2d8a2d;
+}
+
+.dark-mode .work-column-title {
+  border-color: #4ade4a;
+}
+
+.work-list {
   list-style: none;
 }
 
-.projects-list li {
+.work-list > li {
   padding: 12px 0;
   border-bottom: 1px dashed #2d8a2d;
 }
 
-.dark-mode .projects-list li {
+.dark-mode .work-list > li {
   border-color: #4ade4a;
 }
 
-.projects-list li:last-child {
+.experience-list > li:last-child,
+.projects-list > li:last-child {
   border-bottom: none;
 }
 
-.projects-list a,
-.projects-list .project-title {
+.work-item-title {
   display: block;
+  font-size: var(--font-size-body);
+  font-weight: 500;
 }
 
-.projects-list .description {
+.work-item-description {
+  display: block;
+  font-size: var(--font-size-body);
   margin-top: 4px;
 }
 
-.projects-list .source {
-  font-size: 11px;
-  text-transform: uppercase;
+.work-item-meta {
+  font-size: var(--font-size-meta);
   letter-spacing: 0.05em;
   opacity: 0.6;
   margin-top: 4px;
+}
+
+.course-title {
+  font-size: var(--font-size-body);
+  margin-top: 4px;
+}
+
+.work-item-meta-uppercase {
+  text-transform: uppercase;
+}
+
+.experience-trigger {
+  width: 100%;
+  position: relative;
+  padding: 0 28px 0 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.experience-trigger:hover .work-item-title,
+.experience-trigger:focus-visible .work-item-title {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.experience-trigger:focus-visible {
+  outline: 1px solid currentColor;
+  outline-offset: 4px;
+}
+
+.experience-open {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.coursework-column {
+  grid-column: 1 / -1;
+}
+
+.coursework-groups {
+  display: grid;
+  gap: 32px;
+}
+
+.coursework-group-title {
+  font-size: var(--font-size-subheading);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.coursework-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  column-gap: 32px;
+}
+
+.coursework-list > li {
+  padding: 10px 0;
+}
+
+.coursework-legend {
+  font-size: var(--font-size-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-top: 24px;
+}
+
+@media (max-width: 900px) {
+  .work-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .coursework-column {
+    grid-column: auto;
+  }
+
+  .coursework-list {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
 }
 
 /* Bookshelf Section */
@@ -252,7 +377,7 @@ nav a[aria-current="page"] {
 }
 
 .shelf-group-label {
-  font-size: 12px;
+  font-size: var(--font-size-subheading);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -368,7 +493,7 @@ nav a[aria-current="page"] {
 .search-box input {
   width: 100%;
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-body);
   padding: 10px 12px;
   background-color: #e8e8e0;
   border: 1px solid #2d8a2d;
@@ -413,7 +538,7 @@ nav a[aria-current="page"] {
 }
 
 .sort-controls span {
-  font-size: 11px;
+  font-size: var(--font-size-meta);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   opacity: 0.7;
@@ -421,7 +546,7 @@ nav a[aria-current="page"] {
 
 .sort-btn {
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--font-size-meta);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: none;
@@ -458,7 +583,7 @@ nav a[aria-current="page"] {
 }
 
 .book-count {
-  font-size: 11px;
+  font-size: var(--font-size-meta);
   opacity: 0.6;
   margin-left: auto;
 }
@@ -668,7 +793,7 @@ nav a[aria-current="page"] {
 }
 
 .modal-title {
-  font-size: 16px;
+  font-size: var(--font-size-title);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -676,19 +801,19 @@ nav a[aria-current="page"] {
 }
 
 .modal-author {
-  font-size: 12px;
+  font-size: var(--font-size-subheading);
   opacity: 0.7;
   margin-bottom: 16px;
 }
 
 .modal-review {
-  font-size: 14px;
+  font-size: var(--font-size-body);
   line-height: 1.7;
   white-space: pre-line;
 }
 
 .modal-no-review {
-  font-size: 14px;
+  font-size: var(--font-size-body);
   opacity: 0.6;
   font-style: italic;
 }
@@ -702,7 +827,7 @@ footer {
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  font-size: 12px;
+  font-size: var(--font-size-subheading);
 }
 
 .dark-mode footer {
@@ -733,7 +858,7 @@ footer {
 }
 
 .essay-title {
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   margin-bottom: 4px;
 }
@@ -747,7 +872,7 @@ footer {
 }
 
 .essay-meta {
-  font-size: 11px;
+  font-size: var(--font-size-meta);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   opacity: 0.6;
@@ -755,7 +880,7 @@ footer {
 }
 
 .essay-review {
-  font-size: 13px;
+  font-size: var(--font-size-body);
   line-height: 1.6;
   opacity: 0.9;
 }
@@ -763,7 +888,7 @@ footer {
 .essay-badge {
   display: inline-block;
   margin-left: 6px;
-  font-size: 12px;
+  font-size: var(--font-size-subheading);
 }
 
 .essay-badge.heart {
@@ -796,8 +921,8 @@ footer {
 
 .shelf-tab {
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--font-size-title);
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: none;

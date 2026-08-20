@@ -473,22 +473,6 @@ nav a[aria-current="page"] {
   background-color: #1a1a18;
 }
 
-.book-cover .badge.heart {
-  color: #2d8a2d;
-}
-
-.dark-mode .book-cover .badge.heart {
-  color: #4ade4a;
-}
-
-.book-cover .badge.star {
-  color: #2d8a2d;
-}
-
-.dark-mode .book-cover .badge.star {
-  color: #4ade4a;
-}
-
 /* Search Box */
 .search-box {
   margin-bottom: 16px;
@@ -671,22 +655,6 @@ nav a[aria-current="page"] {
 
 .dark-mode .movie-poster .badge {
   background-color: #1a1a18;
-}
-
-.movie-poster .badge.heart {
-  color: #2d8a2d;
-}
-
-.dark-mode .movie-poster .badge.heart {
-  color: #4ade4a;
-}
-
-.movie-poster .badge.star {
-  color: #2d8a2d;
-}
-
-.dark-mode .movie-poster .badge.star {
-  color: #4ade4a;
 }
 
 /* Scroll to Top */
@@ -893,22 +861,6 @@ footer {
   display: inline-block;
   margin-left: 6px;
   font-size: var(--font-size-subheading);
-}
-
-.essay-badge.heart {
-  color: #2d8a2d;
-}
-
-.dark-mode .essay-badge.heart {
-  color: #4ade4a;
-}
-
-.essay-badge.star {
-  color: #2d8a2d;
-}
-
-.dark-mode .essay-badge.star {
-  color: #4ade4a;
 }
 
 /* Shelf Tabs */

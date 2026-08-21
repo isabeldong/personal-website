@@ -1,11 +1,6 @@
 {
   "now": [
     {
-      "text": "product management intern @",
-      "link": "https://www.databricks.com/",
-      "linkText": "databricks"
-    },
-    {
       "text": "cs + business @",
       "link": "https://www.berkeley.edu/",
       "linkText": "uc berkeley"
@@ -17,6 +12,11 @@
     }
   ],
   "previously": [
+    {
+      "text": "product management intern @",
+      "link": "https://www.databricks.com/",
+      "linkText": "databricks"
+    },
     {
       "text": "software development engineer intern @",
       "link": "https://www.amazon.com/",

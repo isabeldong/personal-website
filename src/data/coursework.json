@@ -1,6 +1,6 @@
 [
   {
-    "category": "Computer Science",
+    "category": "Computer Science, Data Science",
     "courses": [
       {
         "code": "CS 61B",
@@ -119,6 +119,11 @@
       {
         "code": "UGBA 135",
         "title": "Personal Financial Management",
+        "inProgress": true
+      },
+      {
+        "code": "UGBA 190T",
+        "title": "Creativity",
         "inProgress": true
       },
       {

@@ -189,6 +189,132 @@ nav a[aria-current="page"] {
   border-color: #4ade4a;
 }
 
+/* CS 180 */
+.cs180-content,
+.cs180-report {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cs180-intro {
+  margin-bottom: 48px;
+}
+
+.cs180-project-list {
+  list-style: none;
+}
+
+.cs180-project-list li {
+  border-bottom: 1px dashed #2d8a2d;
+}
+
+.dark-mode .cs180-project-list li {
+  border-color: #4ade4a;
+}
+
+.cs180-project-link {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  gap: 24px;
+  padding: 16px 0;
+  text-decoration: none;
+}
+
+.cs180-project-link:hover .cs180-project-title {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.cs180-project-number {
+  font-size: var(--font-size-meta);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.cs180-project-title {
+  font-weight: 500;
+}
+
+.cs180-back-link {
+  display: inline-block;
+  margin-bottom: 32px;
+  font-size: var(--font-size-subheading);
+}
+
+.cs180-report-header {
+  display: block;
+  margin-bottom: 32px;
+}
+
+.cs180-report-header .page-title {
+  margin: 0;
+}
+
+.cs180-report-status {
+  opacity: 0.7;
+}
+
+.cs180-report-body section {
+  min-height: 160px;
+  margin-bottom: 48px;
+  scroll-margin-top: 24px;
+}
+
+.cs180-report-body h2 {
+  margin-bottom: 20px;
+  font-size: var(--font-size-heading);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cs180-report-body img,
+.cs180-report-body video {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cs180-image-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.cs180-report-body figcaption {
+  margin-top: 8px;
+  font-size: var(--font-size-meta);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.cs180-dolly-zoom {
+  width: calc((100% - 20px) / 2);
+}
+
+@media (max-width: 600px) {
+  nav {
+    gap: 16px;
+  }
+
+  .cs180-project-link {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .cs180-image-pair {
+    grid-template-columns: 1fr;
+  }
+
+  .cs180-dolly-zoom {
+    width: 100%;
+  }
+}
+
 /* About Section */
 .about-section p {
   margin-bottom: 16px;
@@ -940,3 +1066,36 @@ footer {
 .fade-in:nth-child(2) { animation-delay: 0.2s; }
 .fade-in:nth-child(3) { animation-delay: 0.3s; }
 .fade-in:nth-child(4) { animation-delay: 0.4s; }
+
+@media print {
+  .page-wrapper,
+  .page-wrapper.dark-mode {
+    background: #fff;
+    color: #000;
+  }
+
+  body > .page-wrapper > .container > header,
+  footer,
+  .cs180-back-link {
+    display: none;
+  }
+
+  .container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .page-content {
+    margin-bottom: 0;
+  }
+
+  a,
+  .dark-mode a {
+    color: #000;
+  }
+
+  .fade-in {
+    animation: none;
+    opacity: 1;
+  }
+}

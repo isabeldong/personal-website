@@ -1,0 +1,140 @@
+---
+layout: base.njk
+title: Project 1 | CS 180 | Isabel Dong
+pageKey: cs180
+permalink: /cs180/project-1/index.html
+---
+<main class="page-content cs180-report cs180-project-1 fade-in">
+  <a class="cs180-back-link" href="/cs180/">← All CS 180 Projects</a>
+  <header class="cs180-report-header">
+    <h1 class="page-title">Project 1: Images of the Russian Empire: Colorizing the Prokudin-Gorskii Photo Collection</h1>
+  </header>
+  <article class="cs180-report-body">
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>Prokudin-Gorskii recorded each scene through blue, green, and red filters in three separate exposures on a glass plate. The digitized scan contains those grayscale exposures stacked vertically in BGR order. Each exposure records how much light passed through its filter. Together, they provide the blue, green, and red values needed to reconstruct a color photograph.</p>
+      <p>I load each scan and convert its unsigned integer pixel values to floats between 0 and 1. I divide the scan’s height by three and extract three equal-height arrays. Simply stacking these arrays produces colored outlines around objects because the separate exposures are displaced. I use the blue exposure as a fixed reference and find separate horizontal and vertical shifts for green and red. After applying those shifts, I stack the arrays in RGB order to form the color image.</p>
+    </section>
+    <section id="ncc">
+      <h2>Normalized Cross-Correlation (NCC)</h2>
+      <p>I use normalized cross-correlation (NCC) to score how closely the blue channel matches a shifted green or red channel. Let A and B be the two arrays of interior pixels used for comparison. I subtract each array’s mean to get centered arrays a = A − mean(A) and b = B − mean(B). I then calculate:</p>
+      <p><math xmlns="http://www.w3.org/1998/Math/MathML" aria-label="NCC equals the sum of corresponding a times b values divided by the square root of the product of the sum of a squared and the sum of b squared"><mi>NCC</mi><mo>=</mo><mfrac><mrow><mo>∑</mo><msub><mi>a</mi><mi>i</mi></msub><msub><mi>b</mi><mi>i</mi></msub></mrow><msqrt><mrow><mo>(</mo><mo>∑</mo><msubsup><mi>a</mi><mi>i</mi><mn>2</mn></msubsup><mo>)</mo><mo>(</mo><mo>∑</mo><msubsup><mi>b</mi><mi>i</mi><mn>2</mn></msubsup><mo>)</mo></mrow></msqrt></mfrac></math></p>
+      <p>The index i runs over corresponding pixel positions in the two arrays. The numerator is their dot product: I multiply each pair of centered pixel values and add the products. The denominator is the product of their Euclidean lengths. Dividing by it normalizes the score, which ranges from −1 to 1 for nonconstant arrays. A score near 1 means the intensity patterns match closely. I select the shift with the highest score.</p>
+      <p>Mean subtraction and normalization help NCC compare channels with different overall brightness and contrast. Individual objects can still look different across channels, which can cause a poor match.</p>
+      <p>I calculate NCC on the central regions selected by the alignment function. If either centered array has zero length, I return a score of negative infinity to avoid division by zero and prevent that candidate from winning.</p>
+    </section>
+    <section id="single-scale">
+      <h2>Single-Scale Alignment</h2>
+      <p>Single-scale alignment searches at the original image resolution. I keep blue fixed and search separately for the best green and red shifts. For each channel, I use two loops to test every row and column shift from −15 to +15 pixels, including both endpoints. This gives 31 × 31 = 961 candidate shifts per channel.</p>
+      <p>For each candidate, I shift the entire moving channel with NumPy’s roll operation and calculate NCC against blue. I exclude a margin around each image and calculate NCC only on the remaining central region. This keeps the scan’s black and white borders from affecting the score. I compare the same central pixel positions for every candidate shift. The interior margin also excludes pixels that roll moves from one edge to the opposite edge.</p>
+      <p>I keep the candidate with the highest NCC score and return its shift. All offsets below are in (row, column) order: a positive row value moves the channel down, and a positive column value moves it right. For Cathedral, the selected green shift is (5, 2), so I move green 5 pixels down and 2 pixels right. Red is shifted independently by (12, 3).</p>
+      <p>I apply the selected shifts to the original green and red arrays, then stack red, green, and the fixed blue array in RGB order.</p>
+    <div class="cs180-image-pair">
+      <figure>
+        <img src="/images/cs180/project-1/cathedral_single_scale.jpg" alt="cathedral after single scale alignment">
+        <figcaption>cathedral.jpg<br>Green: (5, 2)<br>Red: (12, 3)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/monastery_single_scale.jpg" alt="monastery after single scale alignment">
+        <figcaption>monastery.jpg<br>Green: (-3, 2)<br>Red: (3, 2)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/tobolsk_single_scale.jpg" alt="tobolsk after single scale alignment">
+        <figcaption>tobolsk.jpg<br>Green: (3, 3)<br>Red: (6, 3)</figcaption>
+      </figure>
+    </div>
+    </section>
+    <section id="pyramid">
+      <h2>Pyramid Alignment</h2>
+      <p>The TIFF scans are much larger than the JPEGs, so their channel displacements can exceed the single-scale search window. Increasing that window at full resolution would require more candidate shifts, each with an NCC calculation over millions of pixels. An image pyramid lets me estimate large shifts on smaller images before refining them at full resolution.</p>
+      <p>I build a separate pyramid for each channel, starting with the original array. I repeatedly resize the most recent level to half its width and height until its longest side is at most 200 pixels. The resizing applies anti-aliasing, which smooths fine details before downsampling so they do not produce false patterns in the smaller image. I store the levels in a list from largest to smallest.</p>
+      <p>Alignment goes through that list in reverse order, from smallest to largest. I first search ±15 pixels in both directions around (0, 0) at the smallest level. The single-scale search calculates NCC on the two channels’ central regions and returns the highest-scoring shift. I perform this process separately for green against blue and red against blue.</p>
+      <p>At each larger level, I double both components of the previous shift because the image dimensions approximately double. A shift of (3, 5) becomes an initial estimate of (6, 10). I then search ±2 pixels around that estimate: rows 4 through 8 and columns 8 through 12 in this example. This tests 25 candidates and corrects small errors from downsampling and rounding. The search returns the full shift at that level, which becomes the estimate for the next level.</p>
+      <p>I repeat this refinement until I reach the original resolution. I apply the final shifts to the original green and red arrays and combine them with blue in RGB order, so the saved image retains the original channel dimensions. I use the same 200-pixel size limit, ±15 initial window, and ±2 refinement window for all 17 supplied and additional scans.</p>
+    </section>
+    <section id="supplied-results">
+      <h2>Pyramid Results for Given Images</h2>
+    <div class="cs180-image-pair">
+      <figure>
+        <img src="/images/cs180/project-1/cathedral_pyramid.jpg" alt="cathedral after pyramid alignment">
+        <figcaption>cathedral.jpg<br>Green: (5, 2)<br>Red: (12, 3)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/church_pyramid.jpg" alt="church after pyramid alignment">
+        <figcaption>church.tif<br>Green: (25, 4)<br>Red: (58, -4)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/emir_pyramid.jpg" alt="emir after pyramid alignment">
+        <figcaption>emir.tif<br>Green: (49, 24)<br>Red: (378, -481)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/harvesters_pyramid.jpg" alt="harvesters after pyramid alignment">
+        <figcaption>harvesters.tif<br>Green: (60, 17)<br>Red: (124, 13)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/icon_pyramid.jpg" alt="icon after pyramid alignment">
+        <figcaption>icon.tif<br>Green: (41, 17)<br>Red: (89, 23)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/ilemselga_pyramid.jpg" alt="ilemselga after pyramid alignment">
+        <figcaption>ilemselga.tif<br>Green: (40, 7)<br>Red: (130, 11)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/melons_pyramid.jpg" alt="melons after pyramid alignment">
+        <figcaption>melons.tif<br>Green: (82, 11)<br>Red: (178, 13)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/monastery_pyramid.jpg" alt="monastery after pyramid alignment">
+        <figcaption>monastery.jpg<br>Green: (-3, 2)<br>Red: (3, 2)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/religous_painting_pyramid.jpg" alt="religous painting after pyramid alignment">
+        <figcaption>religous_painting.tif<br>Green: (28, 3)<br>Red: (68, 7)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/self_portrait_pyramid.jpg" alt="self portrait after pyramid alignment">
+        <figcaption>self_portrait.tif<br>Green: (79, 29)<br>Red: (176, 37)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/siren_pyramid.jpg" alt="siren after pyramid alignment">
+        <figcaption>siren.tif<br>Green: (49, -6)<br>Red: (96, -25)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/three_generations_pyramid.jpg" alt="three generations after pyramid alignment">
+        <figcaption>three_generations.tif<br>Green: (53, 14)<br>Red: (112, 11)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/tobolsk_pyramid.jpg" alt="tobolsk after pyramid alignment">
+        <figcaption>tobolsk.jpg<br>Green: (3, 3)<br>Red: (6, 3)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/wharf_pyramid.jpg" alt="wharf after pyramid alignment">
+        <figcaption>wharf.tif<br>Green: (15, -7)<br>Red: (83, -16)</figcaption>
+      </figure>
+    </div>
+    </section>
+    <section id="additional-results">
+      <h2>Pyramid Results for Additional Images</h2>
+      <p>I also ran the same algorithm on three additional images.</p>
+    <div class="cs180-image-pair">
+      <figure>
+        <img src="/images/cs180/project-1/fortress_pyramid.jpg" alt="fortress after pyramid alignment">
+        <figcaption>fortress.jpg<br>Green: (3, 0)<br>Red: (10, 0)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/railroad_pyramid.jpg" alt="railroad after pyramid alignment">
+        <figcaption>railroad.jpg<br>Green: (4, 3)<br>Red: (30, -17)</figcaption>
+      </figure>
+      <figure>
+        <img src="/images/cs180/project-1/sunset_pyramid.jpg" alt="sunset after pyramid alignment">
+        <figcaption>sunset.jpg<br>Green: (5, 1)<br>Red: (-4, -10)</figcaption>
+      </figure>
+    </div>
+    </section>
+    <section id="emir">
+      <h2>Alignment Failure</h2>
+      <p>Emir’s red channel is misaligned. The algorithm selects a green shift of (49, 24) and a red shift of (378, −481). Applying the red shift leaves a separate red outline of the figure far from the other channels.</p>
+      <p>A likely cause is the difference in the coat’s brightness across exposures. The blue coat appears bright through the blue filter and dark through the red filter. Mean subtraction and normalization help with overall brightness differences, but this local difference can lead raw-pixel NCC to favor an incorrect shift. Once the pyramid selects a poor estimate at a smaller level, the ±2 refinement window at each larger level may be too narrow to recover the correct alignment.</p>
+    </section>
+  </article>
+</main>

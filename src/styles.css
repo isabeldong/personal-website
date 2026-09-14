@@ -271,6 +271,11 @@ nav a[aria-current="page"] {
   letter-spacing: 0.05em;
 }
 
+.cs180-report-body p + p,
+.cs180-report-body p + .cs180-image-pair {
+  margin-top: 1.5em;
+}
+
 .cs180-report-body img,
 .cs180-report-body video {
   display: block;
@@ -290,6 +295,40 @@ nav a[aria-current="page"] {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   opacity: 0.7;
+}
+
+/* Project 1: one body-text line between report elements */
+.cs180-project-1 {
+  --report-gap: calc(var(--font-size-body) * 1.6);
+}
+
+.cs180-project-1 .cs180-back-link,
+.cs180-project-1 .cs180-report-header {
+  margin-bottom: var(--report-gap);
+}
+
+.cs180-project-1 .cs180-report-body section {
+  min-height: 0;
+  margin: 0;
+}
+
+.cs180-project-1 .cs180-report-body h2,
+.cs180-project-1 .cs180-report-body p,
+.cs180-project-1 .cs180-image-pair {
+  margin: 0;
+}
+
+.cs180-project-1 .cs180-report-body section + section,
+.cs180-project-1 .cs180-report-body section > * + * {
+  margin-top: var(--report-gap);
+}
+
+.cs180-project-1 .cs180-image-pair {
+  gap: var(--report-gap);
+}
+
+.cs180-project-1 .cs180-report-body figcaption {
+  margin-top: var(--report-gap);
 }
 
 .cs180-dolly-zoom {

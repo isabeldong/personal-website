@@ -1138,3 +1138,66 @@ footer {
     opacity: 1;
   }
 }
+
+/* Project 2 report */
+.cs180-project-2 {
+  --report-gap: calc(var(--font-size-body) * 1.6);
+}
+.cs180-project-2 .cs180-report-header,
+.cs180-project-2 .cs180-back-link { margin-bottom: var(--report-gap); }
+.cs180-project-2 .cs180-report-body section { min-height: 0; margin: 0; }
+.cs180-project-2 .cs180-report-body p,
+.cs180-project-2 .cs180-report-body h2 { margin: 0; }
+.cs180-project-2 .cs180-report-body > * + *,
+.cs180-project-2 .cs180-report-body section > * + * { margin-top: var(--report-gap); }
+.cs180-project-2 .cs180-report-body section + section { margin-top: 36px; }
+.cs180-project-2 .cs180-report-body .p2-part,
+.cs180-project-2 .cs180-report-body #reflection {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid currentColor;
+}
+.cs180-project-2 h3 { font-size: var(--font-size-title); font-weight: 600; }
+.cs180-project-2 h4 { font-size: var(--font-size-body); font-weight: 600; }
+.cs180-project-2 .p2-contents { display: block; font-size: var(--font-size-body); }
+.cs180-project-2 .p2-grid { display: grid; gap: var(--report-gap); align-items: start; }
+.cs180-project-2 .p2-cols-1 { grid-template-columns: minmax(0, 1fr); max-width: 440px; margin-inline: auto; }
+.cs180-project-2 .p2-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cs180-project-2 .p2-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cs180-project-2 figure { min-width: 0; margin: 0; }
+.cs180-project-2 figure a { display: block; }
+.cs180-project-2 figcaption { text-transform: none; letter-spacing: 0; opacity: .85; }
+.cs180-project-2 pre {
+  padding: 16px;
+  border: 1px solid currentColor;
+  overflow-x: auto;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.cs180-project-2 code { font-family: inherit; overflow-wrap: anywhere; }
+.cs180-project-2 table { width: 100%; border-collapse: collapse; font-size: var(--font-size-body); }
+.cs180-project-2 caption { text-align: left; margin-bottom: 8px; }
+.cs180-project-2 th,
+.cs180-project-2 td { text-align: left; padding: 8px; border-bottom: 1px solid currentColor; }
+.cs180-project-2 th { font-weight: 600; }
+@media (max-width: 600px) {
+  .cs180-project-2 .p2-grid { gap: 16px 10px; }
+  .cs180-project-2 .p2-cols-2 { grid-template-columns: minmax(0, 1fr); }
+  .cs180-project-2 figcaption { font-size: 10px; }
+  .cs180-project-2 th, .cs180-project-2 td { padding: 6px 3px; font-size: 11px; }
+}
+@media print {
+  .cs180-project-2 .p2-contents { display: none; }
+  .cs180-project-2 h2, .cs180-project-2 h3, .cs180-project-2 h4 { break-after: avoid; }
+  .cs180-project-2 figure, .cs180-project-2 tr { break-inside: avoid; }
+  .cs180-project-2 pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+}
+
+.cs180-project-2 .cs180-report-body .p2-part + section { margin-top: var(--report-gap); }
+
+.cs180-project-2 .cs180-report-body #reflection h2 { font-size: 18px; }
+
+.cs180-project-2 .cs180-report-body .p2-part {
+  font-size: 18px;
+  text-transform: none;
+}

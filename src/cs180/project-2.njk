@@ -1,0 +1,412 @@
+---
+layout: base.njk
+title: Project 2 | CS 180 | Isabel Dong
+pageKey: cs180
+permalink: /cs180/project-2/index.html
+---
+<main class="page-content cs180-report cs180-project-2 fade-in">
+<a class="cs180-back-link" href="/cs180/">← All CS 180 Projects</a>
+<header class="cs180-report-header"><h1 class="page-title">Project 2: Fun with filters and frequencies!</h1></header>
+<article class="cs180-report-body">
+<nav class="p2-contents" aria-label="Report sections"><a href="/cs180/project-2/#part-1-1">1.1</a> · <a href="/cs180/project-2/#part-1-2">1.2</a> · <a href="/cs180/project-2/#part-1-3">1.3</a> · <a href="/cs180/project-2/#part-2-1">2.1</a> · <a href="/cs180/project-2/#part-2-2">2.2</a> · <a href="/cs180/project-2/#part-2-3">2.3</a> · <a href="/cs180/project-2/#part-2-4">2.4</a></nav>
+<h2 class="p2-part">Part 1: Fun with Filters</h2>
+<section id="part-1-1"><h3>Part 1.1: Convolutions from Scratch!</h3>
+<p>For each output pixel, convolution multiplies a neighborhood of image pixels by a flipped filter and adds the products. I wrote two NumPy implementations. The first uses four loops: two over the image and two over the filter. The second keeps the image loops and uses NumPy to multiply and sum each neighborhood.</p>
+<p>Both functions flip the filter horizontally and vertically. I add zero padding before convolution so the output has the same dimensions as the input. For an even filter dimension, the padding has one more pixel before the image than after it. This matches SciPy’s <code>mode="same"</code> alignment. Zero padding treats pixels outside the image as black, so the box blur darkens the border.</p>
+<h4>Four loops</h4>
+<pre><code>def convolve_four_loops(image, kernel):
+    # Get image and filter dimensions
+    height, width = image.shape
+    kh, kw = kernel.shape
+
+    # Flip filter vertically and horizontally
+    flipped = kernel[::-1, ::-1]
+
+    # Add zero padding so output keeps original image size
+    padded = np.pad(image, ((kh // 2, (kh - 1) // 2), (kw // 2, (kw - 1) // 2)), mode=&quot;constant&quot;)
+
+    # Create empty output image
+    output = np.zeros((height, width))
+
+    # Visit each output pixel
+    for row in range(height):
+        for col in range(width):
+            # Multiply each nearby pixel by its filter weight
+            for i in range(kh):
+                for j in range(kw):
+                    output[row, col] += padded[row + i, col + j] * flipped[i, j]
+
+    return output</code></pre>
+<h4>Two loops</h4>
+<pre><code>def convolve_two_loops(image, kernel):
+    # Get image and filter dimensions
+    height, width = image.shape
+    kh, kw = kernel.shape
+
+    # Flip filter vertically and horizontally
+    flipped = kernel[::-1, ::-1]
+
+    # Add zero padding so output keeps original image size
+    padded = np.pad(image, ((kh // 2, (kh - 1) // 2), (kw // 2, (kw - 1) // 2)), mode=&quot;constant&quot;)
+
+    # Create empty output image
+    output = np.zeros((height, width))
+
+    # Visit each output pixel
+    for row in range(height):
+        for col in range(width):
+            # Select image neighborhood covered by filter
+            patch = padded[row:row + kh, col:col + kw]
+            # Multiply corresponding values + add products
+            output[row, col] = np.sum(patch * flipped)
+
+    return output</code></pre>
+<p>My 9 × 9 box filter gives all 81 pixels equal weight. Dividing by 81 keeps its weights summed to 1. I apply it to my 500 × 500 selfie and compare the outputs with <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.convolve2d.html">scipy.signal.convolve2d</a> using the same padding.</p>
+<pre><code># Define 9x9 box filter
+box_filter = np.ones((9, 9)) / 81</code></pre>
+<pre><code># Apply box filter with four loops + measure runtime
+start = perf_counter()
+blurred_four = convolve_four_loops(selfie, box_filter)
+four_time = perf_counter() - start
+
+print(f&quot;Four-loop runtime: {four_time:.3f} seconds&quot;)
+
+# Display blurred image
+plt.imshow(blurred_four, cmap=&quot;gray&quot;, vmin=0, vmax=1)
+plt.title(&quot;9x9 box blur: four loops&quot;)</code></pre>
+<pre><code># Apply box filter with two loops + measure runtime
+start = perf_counter()
+blurred_two = convolve_two_loops(selfie, box_filter)
+two_time = perf_counter() - start
+
+print(f&quot;Two-loop runtime: {two_time:.3f} seconds&quot;)
+
+# Display blurred image
+plt.imshow(blurred_two, cmap=&quot;gray&quot;, vmin=0, vmax=1)
+plt.title(&quot;9x9 box blur: two loops&quot;)</code></pre>
+<pre><code># Apply box filter with SciPy + measure runtime
+start = perf_counter()
+blurred_scipy = convolve2d(selfie, box_filter, mode=&quot;same&quot;, boundary=&quot;fill&quot;, fillvalue=0)
+scipy_time = perf_counter() - start
+
+print(f&quot;SciPy runtime: {scipy_time:.3f} seconds&quot;)
+
+# Compare pixel values with SciPy
+print(&quot;Four loops match SciPy:&quot;, np.allclose(blurred_four, blurred_scipy))
+print(&quot;Two loops match SciPy:&quot;, np.allclose(blurred_two, blurred_scipy))</code></pre>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/selfie-original.png"><img src="/images/cs180/project-2/selfie-original.png" width="500" height="500" loading="lazy" alt="Original selfie"></a><figcaption>Original selfie</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/selfie-box-four.png"><img src="/images/cs180/project-2/selfie-box-four.png" width="500" height="500" loading="lazy" alt="Box blur: four loops"></a><figcaption>Box blur: four loops</figcaption></figure>
+<figure><a href="/images/cs180/project-2/selfie-box-two.png"><img src="/images/cs180/project-2/selfie-box-two.png" width="500" height="500" loading="lazy" alt="Box blur: two loops"></a><figcaption>Box blur: two loops</figcaption></figure>
+<figure><a href="/images/cs180/project-2/selfie-box-scipy.png"><img src="/images/cs180/project-2/selfie-box-scipy.png" width="500" height="500" loading="lazy" alt="Box blur: SciPy"></a><figcaption>Box blur: SciPy</figcaption></figure>
+</div>
+<table><caption>9 × 9 box filter runtime</caption><thead><tr><th scope="col">Implementation</th><th scope="col">Time (seconds)</th></tr></thead><tbody><tr><th scope="row">Four loops</th><td>5.341</td></tr><tr><th scope="row">Two loops</th><td>0.570</td></tr><tr><th scope="row">SciPy</th><td>0.023</td></tr></tbody></table>
+<p>I use <code>np.allclose</code> to compare pixel values. Both implementations match SciPy within its default tolerance. The two-loop version is faster because NumPy handles the inner multiplication and sum. SciPy is fastest in this run.</p>
+<p>I also convolve the selfie with finite difference filters. D<sub>x</sub> measures changes across columns, so vertical boundaries appear strongly. D<sub>y</sub> measures changes across rows, so horizontal boundaries appear strongly. In the derivative displays, gray is zero, white is positive, and black is negative.</p>
+<pre><code># Define finite-difference filters
+dx = np.array([[1, -1]])
+dy = np.array([[1], [-1]])</code></pre>
+<pre><code># Apply finite-difference filters with two loops
+selfie_dx = convolve_two_loops(selfie, dx)
+selfie_dy = convolve_two_loops(selfie, dy)
+
+# Display horizontal brightness changes
+plt.figure()
+plt.imshow(selfie_dx, cmap=&quot;gray&quot;, vmin=-1, vmax=1)
+plt.title(&quot;Selfie: Dx&quot;)
+
+# Display vertical brightness changes
+plt.figure()
+plt.imshow(selfie_dy, cmap=&quot;gray&quot;, vmin=-1, vmax=1)
+plt.title(&quot;Selfie: Dy&quot;)</code></pre>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/selfie-dx.png"><img src="/images/cs180/project-2/selfie-dx.png" width="500" height="500" loading="lazy" alt="Selfie: x derivative"></a><figcaption>Selfie: x derivative</figcaption></figure>
+<figure><a href="/images/cs180/project-2/selfie-dy.png"><img src="/images/cs180/project-2/selfie-dy.png" width="500" height="500" loading="lazy" alt="Selfie: y derivative"></a><figcaption>Selfie: y derivative</figcaption></figure>
+</div>
+</section>
+<section id="part-1-2"><h3>Part 1.2: Finite Difference Operator</h3>
+<p>I apply the same D<sub>x</sub> and D<sub>y</sub> filters to the cameraman image with SciPy. Here I use symmetric boundary extension, which mirrors values at the image border. I combine the derivatives with the gradient magnitude, √(I<sub>x</sub>² + I<sub>y</sub>²), to measure edge strength in either direction.</p>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/cameraman-original.png"><img src="/images/cs180/project-2/cameraman-original.png" width="540" height="542" loading="lazy" alt="Cameraman: original"></a><figcaption>Cameraman: original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/cameraman-dx.png"><img src="/images/cs180/project-2/cameraman-dx.png" width="540" height="542" loading="lazy" alt="Cameraman: x derivative"></a><figcaption>Cameraman: x derivative</figcaption></figure>
+<figure><a href="/images/cs180/project-2/cameraman-dy.png"><img src="/images/cs180/project-2/cameraman-dy.png" width="540" height="542" loading="lazy" alt="Cameraman: y derivative"></a><figcaption>Cameraman: y derivative</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/gradient-magnitude.png"><img src="/images/cs180/project-2/gradient-magnitude.png" width="540" height="542" loading="lazy" alt="Gradient magnitude"></a><figcaption>Gradient magnitude</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/cameraman-edges.png"><img src="/images/cs180/project-2/cameraman-edges.png" width="540" height="542" loading="lazy" alt="Binary edges: threshold 0.15"></a><figcaption>Binary edges: threshold 0.15</figcaption></figure>
+</div>
+<p>I binarize the magnitude with <code>gradient_magnitude &gt; 0.15</code>. This keeps the camera and much of the person’s outline while removing many small responses in the grass. Some grass remains, and some weak edges disappear. I chose this threshold to reduce the background detail without losing too much of the subject.</p>
+</section>
+<section id="part-1-3"><h3>Part 1.3: Derivative of Gaussian (DoG) Filter</h3>
+<p>Finite differences respond to small changes in brightness, including texture in the grass. I first smooth the image with a Gaussian filter. I use <code>cv2.getGaussianKernel(19, 3)</code> and multiply the column by its transpose to make a 19 × 19 filter with σ = 3. Pixels near the center receive more weight than pixels near the edge.</p>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/gaussian-kernel.png"><img src="/images/cs180/project-2/gaussian-kernel.png" width="19" height="19" loading="lazy" alt="Gaussian filter: 19 × 19, σ = 3"></a><figcaption>Gaussian filter: 19 × 19, σ = 3</figcaption></figure>
+<figure><a href="/images/cs180/project-2/cameraman-blurred.png"><img src="/images/cs180/project-2/cameraman-blurred.png" width="540" height="542" loading="lazy" alt="Gaussian-smoothed cameraman"></a><figcaption>Gaussian-smoothed cameraman</figcaption></figure>
+</div>
+<p>I take finite differences of the smoothed image and calculate the gradient magnitude again. Smoothing reduces fine texture and spreads the remaining edges over more pixels. It also lowers their peak strength, so I use a smaller threshold of 0.03. A threshold of 0.04 removed more of the outline than I wanted.</p>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/blurred-magnitude.png"><img src="/images/cs180/project-2/blurred-magnitude.png" width="540" height="542" loading="lazy" alt="Smoothed gradient magnitude"></a><figcaption>Smoothed gradient magnitude</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/cameraman-smoothed-edges.png"><img src="/images/cs180/project-2/cameraman-smoothed-edges.png" width="540" height="542" loading="lazy" alt="Smoothed binary edges: threshold 0.03"></a><figcaption>Smoothed binary edges: threshold 0.03</figcaption></figure>
+</div>
+<p>I then convolve the Gaussian filter with D<sub>x</sub> and D<sub>y</sub> using <code>mode="full"</code>. These derivative of Gaussian (DoG) filters combine smoothing and differentiation. Convolution is associative: (I ∗ G) ∗ D = I ∗ (G ∗ D). I can apply each DoG filter directly to the original cameraman image.</p>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/dog-x.png"><img src="/images/cs180/project-2/dog-x.png" width="20" height="19" loading="lazy" alt="DoG x filter: 19 × 20"></a><figcaption>DoG x filter: 19 × 20</figcaption></figure>
+<figure><a href="/images/cs180/project-2/dog-y.png"><img src="/images/cs180/project-2/dog-y.png" width="19" height="20" loading="lazy" alt="DoG y filter: 20 × 19"></a><figcaption>DoG y filter: 20 × 19</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/blurred-magnitude.png"><img src="/images/cs180/project-2/blurred-magnitude.png" width="540" height="542" loading="lazy" alt="Smooth, then differentiate"></a><figcaption>Smooth, then differentiate</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/dog-magnitude.png"><img src="/images/cs180/project-2/dog-magnitude.png" width="540" height="542" loading="lazy" alt="Differentiate Gaussian, then filter image"></a><figcaption>Differentiate Gaussian, then filter image</figcaption></figure>
+</div>
+<p>The x derivatives, y derivatives, and gradient magnitudes from the two methods all pass <code>np.allclose</code> in my notebook. Compared with Part 1.2, both methods reduce the grass texture and produce wider, smoother edges. The magnitude images use their own display ranges so the edge structure is visible.</p>
+</section>
+<h2 class="p2-part">Part 2: Fun with Frequencies!</h2>
+<section id="part-2-1"><h3>Part 2.1: Image "Sharpening"</h3>
+<p>A Gaussian blur reduces fine detail. I subtract the blurred image from the original to isolate high frequencies, then add a scaled copy of those details back to the original. The sharpened image is I + α(I − G ∗ I). Here, I is the original image, G is the Gaussian blur filter, and ∗ means convolution. G ∗ I is the blurred image, so I − G ∗ I contains the high-frequency details. The sharpening amount α controls how much of that detail I add back. With α = 0, the image stays unchanged; larger positive values increase the sharpening.</p>
+<p>I combine these operations into one convolution with the filter (1 + α)δ − αG. The impulse filter δ has a 1 at its center and zeros elsewhere, so convolving it with I returns I unchanged. This combined filter produces (1 + α)I − α(G ∗ I), which is the same sharpening formula written above.</p>
+<p>I use a 7 × 7 Gaussian with σ = 1 and symmetric boundary extension. After sharpening, I clip values to [0, 1]. The high-frequency displays use gray for zero so both positive and negative details remain visible.</p>
+<h4>Taj Mahal</h4>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/taj-original.png"><img src="/images/cs180/project-2/taj-original.png" width="300" height="300" loading="lazy" alt="Taj Mahal: original"></a><figcaption>Taj Mahal: original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/taj-blurred.png"><img src="/images/cs180/project-2/taj-blurred.png" width="300" height="300" loading="lazy" alt="Taj Mahal: Gaussian blur"></a><figcaption>Taj Mahal: Gaussian blur</figcaption></figure>
+<figure><a href="/images/cs180/project-2/taj-high.png"><img src="/images/cs180/project-2/taj-high.png" width="300" height="300" loading="lazy" alt="Taj Mahal: high frequencies"></a><figcaption>Taj Mahal: high frequencies</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/taj-original.png"><img src="/images/cs180/project-2/taj-original.png" width="300" height="300" loading="lazy" alt="α = 0"></a><figcaption>α = 0</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/taj-sharpened-1.png"><img src="/images/cs180/project-2/taj-sharpened-1.png" width="300" height="300" loading="lazy" alt="α = 1"></a><figcaption>α = 1</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/taj-sharpened-2.png"><img src="/images/cs180/project-2/taj-sharpened-2.png" width="300" height="300" loading="lazy" alt="α = 2"></a><figcaption>α = 2</figcaption></figure>
+</div>
+<h4>Berkeley</h4>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/berkeley-original.png"><img src="/images/cs180/project-2/berkeley-original.png" width="1200" height="675" loading="lazy" alt="Berkeley: original"></a><figcaption>Berkeley: original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/berkeley-blurred.png"><img src="/images/cs180/project-2/berkeley-blurred.png" width="1200" height="675" loading="lazy" alt="Berkeley: Gaussian blur"></a><figcaption>Berkeley: Gaussian blur</figcaption></figure>
+<figure><a href="/images/cs180/project-2/berkeley-high.png"><img src="/images/cs180/project-2/berkeley-high.png" width="1200" height="675" loading="lazy" alt="Berkeley: high frequencies"></a><figcaption>Berkeley: high frequencies</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/berkeley-original.png"><img src="/images/cs180/project-2/berkeley-original.png" width="1200" height="675" loading="lazy" alt="α = 0"></a><figcaption>α = 0</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/berkeley-sharpened-1.png"><img src="/images/cs180/project-2/berkeley-sharpened-1.png" width="1200" height="675" loading="lazy" alt="α = 1"></a><figcaption>α = 1</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/berkeley-sharpened-2.png"><img src="/images/cs180/project-2/berkeley-sharpened-2.png" width="1200" height="675" loading="lazy" alt="α = 2"></a><figcaption>α = 2</figcaption></figure>
+</div>
+<p>Increasing α strengthens contrast around edges. At α = 2, the building details stand out more, but bright and dark outlines also become stronger. Sharpening can exaggerate existing texture.</p>
+<h4>Blur, then sharpen</h4>
+<p>I blur the Berkeley image with the same Gaussian, then sharpen that blurred image with α = 2. The result has stronger boundaries than the blurred image. Fine detail lost during blurring is still missing. The full images make the overall change look small, so I also compare the same crop from each image.</p>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/berkeley-original.png"><img src="/images/cs180/project-2/berkeley-original.png" width="1200" height="675" loading="lazy" alt="Original"></a><figcaption>Original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/berkeley-blurred.png"><img src="/images/cs180/project-2/berkeley-blurred.png" width="1200" height="675" loading="lazy" alt="Blurred"></a><figcaption>Blurred</figcaption></figure>
+<figure><a href="/images/cs180/project-2/berkeley-resharpened.png"><img src="/images/cs180/project-2/berkeley-resharpened.png" width="1200" height="675" loading="lazy" alt="Resharpened: α = 2"></a><figcaption>Resharpened: α = 2</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/berkeley-closeup.png"><img src="/images/cs180/project-2/berkeley-closeup.png" width="200" height="350" loading="lazy" alt="Original: close-up"></a><figcaption>Original: close-up</figcaption></figure>
+<figure><a href="/images/cs180/project-2/berkeley-blurred-closeup.png"><img src="/images/cs180/project-2/berkeley-blurred-closeup.png" width="200" height="350" loading="lazy" alt="Blurred: close-up"></a><figcaption>Blurred: close-up</figcaption></figure>
+<figure><a href="/images/cs180/project-2/berkeley-resharpened-closeup.png"><img src="/images/cs180/project-2/berkeley-resharpened-closeup.png" width="200" height="350" loading="lazy" alt="Resharpened: close-up"></a><figcaption>Resharpened: close-up</figcaption></figure>
+</div>
+</section>
+<section id="part-2-2"><h3>Part 2.2: Hybrid Images</h3>
+<p>A hybrid image combines the low frequencies of one image with the high frequencies of another. I blur the first image to keep its low frequencies. I subtract a blurred copy of the second image from itself to keep its high frequencies, then add these two components. The first image’s broad shapes are easier to see from farther away, while the second image’s fine details are easier to see up close. This implements the Gaussian filtering method in Section 2 of <a href="https://web.archive.org/web/20070315210101/http://cvcl.mit.edu/hybrid/OlivaTorralb_Hybrid_Siggraph06.pdf">Oliva, Torralba, and Schyns’s Hybrid Images</a>.</p>
+<p>I use the starter <code>align_images</code> function and select corresponding eyes to align the faces. The function adjusts position, scale, and rotation, then crops the images to a shared size. This follows the paper’s discussion in Section 2.2: matching features and pose helps the two images form a coherent face.</p>
+<p>Each Gaussian extends three standard deviations from its center. I filter vertically and horizontally with symmetric boundary extension. The σ values below are in pixels after alignment. A larger σ makes a wider blur and a lower low-pass cutoff. For the high-pass component, subtracting that wider blur retains a broader range of detail.</p>
+<h4>Derek and Nutmeg</h4>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/derek-original.png"><img src="/images/cs180/project-2/derek-original.png" width="732" height="1024" loading="lazy" alt="Derek: original"></a><figcaption>Derek: original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/nutmeg-original.png"><img src="/images/cs180/project-2/nutmeg-original.png" width="1408" height="1056" loading="lazy" alt="Nutmeg: original"></a><figcaption>Nutmeg: original</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/derek-aligned.png"><img src="/images/cs180/project-2/derek-aligned.png" width="751" height="1262" loading="lazy" alt="Derek: aligned"></a><figcaption>Derek: aligned</figcaption></figure>
+<figure><a href="/images/cs180/project-2/nutmeg-aligned.png"><img src="/images/cs180/project-2/nutmeg-aligned.png" width="751" height="1262" loading="lazy" alt="Nutmeg: aligned"></a><figcaption>Nutmeg: aligned</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/derek-nutmeg-hybrid.png"><img src="/images/cs180/project-2/derek-nutmeg-hybrid.png" width="751" height="1262" loading="lazy" alt="Derek + Nutmeg"></a><figcaption>Derek + Nutmeg</figcaption></figure>
+</div>
+<p>Derek supplies low frequencies with σ = 12, and Nutmeg supplies high frequencies with σ = 8. I pass Nutmeg first to the alignment function so the rotation adjusts Nutmeg toward Derek’s pose. Nutmeg’s eyes and fur are visible up close; Derek’s face becomes clearer when I step back.</p>
+<h4>Paige and Azzi</h4>
+<p>Paige and Azzi are my favorite pair. Paige supplies the low frequencies with σ = 4, and Azzi supplies the high frequencies with σ = 3. I first tried σ = 6 for Paige, but her face was too faint. Reducing it to 4 kept more of her facial structure.</p>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/paige-original.png"><img src="/images/cs180/project-2/paige-original.png" width="1040" height="760" loading="lazy" alt="Paige: original"></a><figcaption>Paige: original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/azzi-original.png"><img src="/images/cs180/project-2/azzi-original.png" width="600" height="436" loading="lazy" alt="Azzi: original"></a><figcaption>Azzi: original</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/paige-aligned.png"><img src="/images/cs180/project-2/paige-aligned.png" width="581" height="499" loading="lazy" alt="Paige: aligned"></a><figcaption>Paige: aligned</figcaption></figure>
+<figure><a href="/images/cs180/project-2/azzi-aligned.png"><img src="/images/cs180/project-2/azzi-aligned.png" width="581" height="499" loading="lazy" alt="Azzi: aligned"></a><figcaption>Azzi: aligned</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/paige-low.png"><img src="/images/cs180/project-2/paige-low.png" width="581" height="499" loading="lazy" alt="Paige: low frequencies, σ = 4"></a><figcaption>Paige: low frequencies, σ = 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/azzi-high.png"><img src="/images/cs180/project-2/azzi-high.png" width="581" height="499" loading="lazy" alt="Azzi: high frequencies, σ = 3"></a><figcaption>Azzi: high frequencies, σ = 3</figcaption></figure>
+</div>
+<p>I calculate each Fourier display with <code>log(abs(fftshift(fft2(image))))</code>. The shift puts low frequencies at the center, and the logarithm makes weaker frequencies visible. The input transforms below use the aligned images. I display each transform with its own grayscale range.</p>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/fft-paige-input.png"><img src="/images/cs180/project-2/fft-paige-input.png" width="581" height="499" loading="lazy" alt="FFT: aligned Paige"></a><figcaption>FFT: aligned Paige</figcaption></figure>
+<figure><a href="/images/cs180/project-2/fft-azzi-input.png"><img src="/images/cs180/project-2/fft-azzi-input.png" width="581" height="499" loading="lazy" alt="FFT: aligned Azzi"></a><figcaption>FFT: aligned Azzi</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/fft-paige-low.png"><img src="/images/cs180/project-2/fft-paige-low.png" width="581" height="499" loading="lazy" alt="FFT: low-pass Paige"></a><figcaption>FFT: low-pass Paige</figcaption></figure>
+<figure><a href="/images/cs180/project-2/fft-azzi-high.png"><img src="/images/cs180/project-2/fft-azzi-high.png" width="581" height="499" loading="lazy" alt="FFT: high-pass Azzi"></a><figcaption>FFT: high-pass Azzi</figcaption></figure>
+<figure><a href="/images/cs180/project-2/fft-paige-azzi-hybrid.png"><img src="/images/cs180/project-2/fft-paige-azzi-hybrid.png" width="581" height="499" loading="lazy" alt="FFT: final hybrid"></a><figcaption>FFT: final hybrid</figcaption></figure>
+</div>
+<p>The low-pass result concentrates energy near the center. Subtracting Azzi’s blur removes low frequencies, while her edges remain in the high-pass result. The final hybrid contains both components. Their mouths and face outlines do not align perfectly, so some doubled features remain visible up close.</p>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/paige-azzi-hybrid.png"><img src="/images/cs180/project-2/paige-azzi-hybrid.png" width="581" height="499" loading="lazy" alt="Final combined hybrid: Paige + Azzi"></a><figcaption>Final combined hybrid: Paige + Azzi</figcaption></figure>
+</div>
+<h4>Josh and Rushil</h4>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/josh-original.png"><img src="/images/cs180/project-2/josh-original.png" width="468" height="655" loading="lazy" alt="Josh: original"></a><figcaption>Josh: original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/rushil-original.png"><img src="/images/cs180/project-2/rushil-original.png" width="2320" height="3088" loading="lazy" alt="Rushil: original"></a><figcaption>Rushil: original</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/josh-rushil-hybrid.png"><img src="/images/cs180/project-2/josh-rushil-hybrid.png" width="479" height="833" loading="lazy" alt="Josh + Rushil"></a><figcaption>Josh + Rushil</figcaption></figure>
+</div>
+<p>Josh supplies low frequencies with σ = 6, and Rushil supplies high frequencies with σ = 6. Rushil was hard to see with a high-pass σ of 3. Increasing it to 6 retained more of his face, while Josh remained visible from farther away. These settings differ from Paige and Azzi because the aligned faces have different scales and details.</p>
+</section>
+<section id="part-2-3"><h3>Part 2.3: Gaussian and Laplacian Stacks</h3>
+<p>I build six Gaussian levels for each fruit. Level 0 is the original image. To create each next level, I blur the previous one with σ = 2, 4, 8, 16, and 32 in order. These are successive blur widths, so each level includes the smoothing from earlier levels. Every level keeps the original 300 × 300 dimensions.</p>
+<p>This uses the scale separation described in Section 2 of <a href="https://www.cs.princeton.edu/courses/archive/fall05/cos429/papers/burt_adelson.pdf">Burt and Adelson’s A Multiresolution Spline With Application to Image Mosaics</a>. Their pyramids reduce image dimensions between levels. My stacks retain the full dimensions, as the project requires.</p>
+<h4>Gaussian stacks</h4>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/apple-gaussian-0.png"><img src="/images/cs180/project-2/apple-gaussian-0.png" width="300" height="300" loading="lazy" alt="Apple: Gaussian level 0"></a><figcaption>Apple: Gaussian level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-gaussian-1.png"><img src="/images/cs180/project-2/apple-gaussian-1.png" width="300" height="300" loading="lazy" alt="Apple: Gaussian level 1"></a><figcaption>Apple: Gaussian level 1</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-gaussian-2.png"><img src="/images/cs180/project-2/apple-gaussian-2.png" width="300" height="300" loading="lazy" alt="Apple: Gaussian level 2"></a><figcaption>Apple: Gaussian level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-gaussian-3.png"><img src="/images/cs180/project-2/apple-gaussian-3.png" width="300" height="300" loading="lazy" alt="Apple: Gaussian level 3"></a><figcaption>Apple: Gaussian level 3</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-gaussian-4.png"><img src="/images/cs180/project-2/apple-gaussian-4.png" width="300" height="300" loading="lazy" alt="Apple: Gaussian level 4"></a><figcaption>Apple: Gaussian level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-gaussian-5.png"><img src="/images/cs180/project-2/apple-gaussian-5.png" width="300" height="300" loading="lazy" alt="Apple: Gaussian level 5"></a><figcaption>Apple: Gaussian level 5</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/orange-gaussian-0.png"><img src="/images/cs180/project-2/orange-gaussian-0.png" width="300" height="300" loading="lazy" alt="Orange: Gaussian level 0"></a><figcaption>Orange: Gaussian level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-gaussian-1.png"><img src="/images/cs180/project-2/orange-gaussian-1.png" width="300" height="300" loading="lazy" alt="Orange: Gaussian level 1"></a><figcaption>Orange: Gaussian level 1</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-gaussian-2.png"><img src="/images/cs180/project-2/orange-gaussian-2.png" width="300" height="300" loading="lazy" alt="Orange: Gaussian level 2"></a><figcaption>Orange: Gaussian level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-gaussian-3.png"><img src="/images/cs180/project-2/orange-gaussian-3.png" width="300" height="300" loading="lazy" alt="Orange: Gaussian level 3"></a><figcaption>Orange: Gaussian level 3</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-gaussian-4.png"><img src="/images/cs180/project-2/orange-gaussian-4.png" width="300" height="300" loading="lazy" alt="Orange: Gaussian level 4"></a><figcaption>Orange: Gaussian level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-gaussian-5.png"><img src="/images/cs180/project-2/orange-gaussian-5.png" width="300" height="300" loading="lazy" alt="Orange: Gaussian level 5"></a><figcaption>Orange: Gaussian level 5</figcaption></figure>
+</div>
+<p>For Laplacian levels 0 through 4, I subtract each next Gaussian level from the current level: L<sub>i</sub> = G<sub>i</sub> − G<sub>i+1</sub>. Level 5 stores the final blurred image. Each difference contains detail removed by that step of blurring. Adding all six levels reconstructs the original because the intermediate Gaussian terms cancel. This follows the difference and reconstruction method in Sections 2.2 and 2.3 of Burt and Adelson.</p>
+<h4>Laplacian stacks</h4>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/apple-laplacian-0.png"><img src="/images/cs180/project-2/apple-laplacian-0.png" width="300" height="300" loading="lazy" alt="Apple: Laplacian level 0"></a><figcaption>Apple: Laplacian level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-laplacian-1.png"><img src="/images/cs180/project-2/apple-laplacian-1.png" width="300" height="300" loading="lazy" alt="Apple: Laplacian level 1"></a><figcaption>Apple: Laplacian level 1</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-laplacian-2.png"><img src="/images/cs180/project-2/apple-laplacian-2.png" width="300" height="300" loading="lazy" alt="Apple: Laplacian level 2"></a><figcaption>Apple: Laplacian level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-laplacian-3.png"><img src="/images/cs180/project-2/apple-laplacian-3.png" width="300" height="300" loading="lazy" alt="Apple: Laplacian level 3"></a><figcaption>Apple: Laplacian level 3</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-laplacian-4.png"><img src="/images/cs180/project-2/apple-laplacian-4.png" width="300" height="300" loading="lazy" alt="Apple: Laplacian level 4"></a><figcaption>Apple: Laplacian level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/apple-laplacian-5.png"><img src="/images/cs180/project-2/apple-laplacian-5.png" width="300" height="300" loading="lazy" alt="Apple: level 5, blurred residual"></a><figcaption>Apple: level 5, blurred residual</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/orange-laplacian-0.png"><img src="/images/cs180/project-2/orange-laplacian-0.png" width="300" height="300" loading="lazy" alt="Orange: Laplacian level 0"></a><figcaption>Orange: Laplacian level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-laplacian-1.png"><img src="/images/cs180/project-2/orange-laplacian-1.png" width="300" height="300" loading="lazy" alt="Orange: Laplacian level 1"></a><figcaption>Orange: Laplacian level 1</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-laplacian-2.png"><img src="/images/cs180/project-2/orange-laplacian-2.png" width="300" height="300" loading="lazy" alt="Orange: Laplacian level 2"></a><figcaption>Orange: Laplacian level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-laplacian-3.png"><img src="/images/cs180/project-2/orange-laplacian-3.png" width="300" height="300" loading="lazy" alt="Orange: Laplacian level 3"></a><figcaption>Orange: Laplacian level 3</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-laplacian-4.png"><img src="/images/cs180/project-2/orange-laplacian-4.png" width="300" height="300" loading="lazy" alt="Orange: Laplacian level 4"></a><figcaption>Orange: Laplacian level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-laplacian-5.png"><img src="/images/cs180/project-2/orange-laplacian-5.png" width="300" height="300" loading="lazy" alt="Orange: level 5, blurred residual"></a><figcaption>Orange: level 5, blurred residual</figcaption></figure>
+</div>
+<h4>Recreating Figure 3.42</h4>
+<p>I use a mask that selects the apple on the left and the orange on the right, then build a Gaussian stack of that mask. At each level I multiply the apple’s Laplacian level by the mask and the orange’s by one minus the mask. I add the two contributions. Part 2.4 explains this blending step in more detail.</p>
+<p>The layout below recreates panels (a) through (l) of Figure 3.42 in Szeliski’s Computer Vision: Algorithms and Applications. The first three rows contain masked Laplacian contributions at levels 0, 2, and 4. The last row sums all six levels, including levels omitted from the display.</p>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/oraple-panel-a.png"><img src="/images/cs180/project-2/oraple-panel-a.png" width="300" height="300" loading="lazy" alt="(a) Apple contribution, level 0"></a><figcaption>(a) Apple contribution, level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-b.png"><img src="/images/cs180/project-2/oraple-panel-b.png" width="300" height="300" loading="lazy" alt="(b) Orange contribution, level 0"></a><figcaption>(b) Orange contribution, level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-c.png"><img src="/images/cs180/project-2/oraple-panel-c.png" width="300" height="300" loading="lazy" alt="(c) Combined, level 0"></a><figcaption>(c) Combined, level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-d.png"><img src="/images/cs180/project-2/oraple-panel-d.png" width="300" height="300" loading="lazy" alt="(d) Apple contribution, level 2"></a><figcaption>(d) Apple contribution, level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-e.png"><img src="/images/cs180/project-2/oraple-panel-e.png" width="300" height="300" loading="lazy" alt="(e) Orange contribution, level 2"></a><figcaption>(e) Orange contribution, level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-f.png"><img src="/images/cs180/project-2/oraple-panel-f.png" width="300" height="300" loading="lazy" alt="(f) Combined, level 2"></a><figcaption>(f) Combined, level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-g.png"><img src="/images/cs180/project-2/oraple-panel-g.png" width="300" height="300" loading="lazy" alt="(g) Apple contribution, level 4"></a><figcaption>(g) Apple contribution, level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-h.png"><img src="/images/cs180/project-2/oraple-panel-h.png" width="300" height="300" loading="lazy" alt="(h) Orange contribution, level 4"></a><figcaption>(h) Orange contribution, level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-i.png"><img src="/images/cs180/project-2/oraple-panel-i.png" width="300" height="300" loading="lazy" alt="(i) Combined, level 4"></a><figcaption>(i) Combined, level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-j.png"><img src="/images/cs180/project-2/oraple-panel-j.png" width="300" height="300" loading="lazy" alt="(j) Apple contribution, all levels"></a><figcaption>(j) Apple contribution, all levels</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-k.png"><img src="/images/cs180/project-2/oraple-panel-k.png" width="300" height="300" loading="lazy" alt="(k) Orange contribution, all levels"></a><figcaption>(k) Orange contribution, all levels</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-panel-l.png"><img src="/images/cs180/project-2/oraple-panel-l.png" width="300" height="300" loading="lazy" alt="(l) Final blend"></a><figcaption>(l) Final blend</figcaption></figure>
+</div>
+<p>Fine edges appear in the first row. Lower rows contain broader detail, and their Gaussian masks spread the transition over more pixels. Each of the first three rows uses a shared symmetric display range across its three panels. The bottom row shows the reconstructed contributions and final blend.</p>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/oraple.png"><img src="/images/cs180/project-2/oraple.png" width="300" height="300" loading="lazy" alt="Final oraple"></a><figcaption>Final oraple</figcaption></figure>
+</div>
+</section>
+<section id="part-2-4"><h3>Part 2.4: Multiresolution Blending (a.k.a. the Oraple!)</h3>
+<p>I use the mask-based blend in Section 3.2 of Burt and Adelson, on page 230. I build Gaussian stacks for the mask and both input images, then obtain Laplacian stacks for the images. At each level, B<sub>i</sub> = M<sub>i</sub>L<sub>A,i</sub> + (1 − M<sub>i</sub>)L<sub>B,i</sub>.</p>
+<p>Here, i is the stack level, and A and B label the two input images. L<sub>A,i</sub> and L<sub>B,i</sub> are their Laplacian stack values at that level. M<sub>i</sub> is the corresponding Gaussian mask level, and B<sub>i</sub> is the blended result at that level. I multiply corresponding pixels: M<sub>i</sub> weights image A’s contribution, and 1 − M<sub>i</sub> weights image B’s contribution. A mask value of 1 selects A, a value of 0 selects B, and values between them mix both. The final image is the sum of B<sub>i</sub> over all six levels.</p>
+<p>The mask is sharper at fine levels and more blurred at coarse levels. This keeps small details near the selected boundary while mixing broad brightness changes over a wider region. Since the stacks have matching dimensions, I combine corresponding pixels directly and sum the levels.</p>
+<h4>Apple and orange</h4>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/apple-original.png"><img src="/images/cs180/project-2/apple-original.png" width="300" height="300" loading="lazy" alt="Apple"></a><figcaption>Apple</figcaption></figure>
+<figure><a href="/images/cs180/project-2/orange-original.png"><img src="/images/cs180/project-2/orange-original.png" width="300" height="300" loading="lazy" alt="Orange"></a><figcaption>Orange</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-mask.png"><img src="/images/cs180/project-2/oraple-mask.png" width="300" height="300" loading="lazy" alt="Mask: apple on left"></a><figcaption>Mask: apple on left</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/oraple-mask-0.png"><img src="/images/cs180/project-2/oraple-mask-0.png" width="300" height="300" loading="lazy" alt="Mask: Gaussian level 0"></a><figcaption>Mask: Gaussian level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-mask-1.png"><img src="/images/cs180/project-2/oraple-mask-1.png" width="300" height="300" loading="lazy" alt="Mask: Gaussian level 1"></a><figcaption>Mask: Gaussian level 1</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-mask-2.png"><img src="/images/cs180/project-2/oraple-mask-2.png" width="300" height="300" loading="lazy" alt="Mask: Gaussian level 2"></a><figcaption>Mask: Gaussian level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-mask-3.png"><img src="/images/cs180/project-2/oraple-mask-3.png" width="300" height="300" loading="lazy" alt="Mask: Gaussian level 3"></a><figcaption>Mask: Gaussian level 3</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-mask-4.png"><img src="/images/cs180/project-2/oraple-mask-4.png" width="300" height="300" loading="lazy" alt="Mask: Gaussian level 4"></a><figcaption>Mask: Gaussian level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/oraple-mask-5.png"><img src="/images/cs180/project-2/oraple-mask-5.png" width="300" height="300" loading="lazy" alt="Mask: Gaussian level 5"></a><figcaption>Mask: Gaussian level 5</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/oraple.png"><img src="/images/cs180/project-2/oraple.png" width="300" height="300" loading="lazy" alt="Final oraple"></a><figcaption>Final oraple</figcaption></figure>
+</div>
+<h4>Isabel and Paige</h4>
+<p>I replace Paige’s face with mine. I resize the basketball image to 1,000 pixels wide and select corresponding eyes in both images. A similarity transform scales, rotates, and moves my face into position. I then shift the target points 20 pixels right to place my face within Paige’s face area.</p>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/isabel-original.png"><img src="/images/cs180/project-2/isabel-original.png" width="500" height="500" loading="lazy" alt="Isabel: original"></a><figcaption>Isabel: original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/paige-playing-original.png"><img src="/images/cs180/project-2/paige-playing-original.png" width="1000" height="667" loading="lazy" alt="Paige: original"></a><figcaption>Paige: original</figcaption></figure>
+</div>
+<p>The mask is an ellipse centered at (x, y) = (470, 168), with horizontal radius 45 and vertical radius 65 pixels. White selects my face; black selects Paige’s image. The black region outside the warped selfie is padding from the transform. The mask restricts the blend to the face area.</p>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/isabel-aligned.png"><img src="/images/cs180/project-2/isabel-aligned.png" width="1000" height="667" loading="lazy" alt="Isabel: transformed to Paige’s image"></a><figcaption>Isabel: transformed to Paige’s image</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-mask.png"><img src="/images/cs180/project-2/isabel-paige-mask.png" width="1000" height="667" loading="lazy" alt="Elliptical face mask"></a><figcaption>Elliptical face mask</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/isabel-paige.png"><img src="/images/cs180/project-2/isabel-paige.png" width="1000" height="667" loading="lazy" alt="Isabel + Paige"></a><figcaption>Isabel + Paige</figcaption></figure>
+</div>
+<p>I use the same six levels and blur widths as the oraple. This keeps Paige’s pose and background while replacing the face. Some shading remains around the jaw and neck where the source faces differ.</p>
+<h4>Mask and blended levels</h4>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/isabel-paige-mask-0.png"><img src="/images/cs180/project-2/isabel-paige-mask-0.png" width="1000" height="667" loading="lazy" alt="Face mask: Gaussian level 0"></a><figcaption>Face mask: Gaussian level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-mask-1.png"><img src="/images/cs180/project-2/isabel-paige-mask-1.png" width="1000" height="667" loading="lazy" alt="Face mask: Gaussian level 1"></a><figcaption>Face mask: Gaussian level 1</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-mask-2.png"><img src="/images/cs180/project-2/isabel-paige-mask-2.png" width="1000" height="667" loading="lazy" alt="Face mask: Gaussian level 2"></a><figcaption>Face mask: Gaussian level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-mask-3.png"><img src="/images/cs180/project-2/isabel-paige-mask-3.png" width="1000" height="667" loading="lazy" alt="Face mask: Gaussian level 3"></a><figcaption>Face mask: Gaussian level 3</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-mask-4.png"><img src="/images/cs180/project-2/isabel-paige-mask-4.png" width="1000" height="667" loading="lazy" alt="Face mask: Gaussian level 4"></a><figcaption>Face mask: Gaussian level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-mask-5.png"><img src="/images/cs180/project-2/isabel-paige-mask-5.png" width="1000" height="667" loading="lazy" alt="Face mask: Gaussian level 5"></a><figcaption>Face mask: Gaussian level 5</figcaption></figure>
+</div>
+<p>For this pair, I show the masked contributions in the same layout as Figure 10 of Burt and Adelson. Rows one through three use levels 0, 2, and 4. The last row adds all six levels. Fine facial details remain localized, while the coarser contributions mix brightness over a larger area.</p>
+<div class="p2-grid p2-cols-3">
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-a.png"><img src="/images/cs180/project-2/isabel-paige-panel-a.png" width="1000" height="667" loading="lazy" alt="(a) Isabel contribution, level 0"></a><figcaption>(a) Isabel contribution, level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-b.png"><img src="/images/cs180/project-2/isabel-paige-panel-b.png" width="1000" height="667" loading="lazy" alt="(b) Paige contribution, level 0"></a><figcaption>(b) Paige contribution, level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-c.png"><img src="/images/cs180/project-2/isabel-paige-panel-c.png" width="1000" height="667" loading="lazy" alt="(c) Combined, level 0"></a><figcaption>(c) Combined, level 0</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-d.png"><img src="/images/cs180/project-2/isabel-paige-panel-d.png" width="1000" height="667" loading="lazy" alt="(d) Isabel contribution, level 2"></a><figcaption>(d) Isabel contribution, level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-e.png"><img src="/images/cs180/project-2/isabel-paige-panel-e.png" width="1000" height="667" loading="lazy" alt="(e) Paige contribution, level 2"></a><figcaption>(e) Paige contribution, level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-f.png"><img src="/images/cs180/project-2/isabel-paige-panel-f.png" width="1000" height="667" loading="lazy" alt="(f) Combined, level 2"></a><figcaption>(f) Combined, level 2</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-g.png"><img src="/images/cs180/project-2/isabel-paige-panel-g.png" width="1000" height="667" loading="lazy" alt="(g) Isabel contribution, level 4"></a><figcaption>(g) Isabel contribution, level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-h.png"><img src="/images/cs180/project-2/isabel-paige-panel-h.png" width="1000" height="667" loading="lazy" alt="(h) Paige contribution, level 4"></a><figcaption>(h) Paige contribution, level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-i.png"><img src="/images/cs180/project-2/isabel-paige-panel-i.png" width="1000" height="667" loading="lazy" alt="(i) Combined, level 4"></a><figcaption>(i) Combined, level 4</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-j.png"><img src="/images/cs180/project-2/isabel-paige-panel-j.png" width="1000" height="667" loading="lazy" alt="(j) Isabel contribution, all levels"></a><figcaption>(j) Isabel contribution, all levels</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-k.png"><img src="/images/cs180/project-2/isabel-paige-panel-k.png" width="1000" height="667" loading="lazy" alt="(k) Paige contribution, all levels"></a><figcaption>(k) Paige contribution, all levels</figcaption></figure>
+<figure><a href="/images/cs180/project-2/isabel-paige-panel-l.png"><img src="/images/cs180/project-2/isabel-paige-panel-l.png" width="1000" height="667" loading="lazy" alt="(l) Final blend"></a><figcaption>(l) Final blend</figcaption></figure>
+</div>
+<h4>Minion and Snoopy</h4>
+<p>I resize Snoopy’s image to 1,000 pixels wide and use another similarity transform to place the Minion’s face over Snoopy’s head. I select target points for the Minion’s eyes and use an ellipse centered at (500, 200), with radii 115 and 140 pixels. I blend with the same stack settings.</p>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/minion-original.png"><img src="/images/cs180/project-2/minion-original.png" width="700" height="653" loading="lazy" alt="Minion: original"></a><figcaption>Minion: original</figcaption></figure>
+<figure><a href="/images/cs180/project-2/snoopy-original.png"><img src="/images/cs180/project-2/snoopy-original.png" width="1000" height="750" loading="lazy" alt="Snoopy: original"></a><figcaption>Snoopy: original</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-2">
+<figure><a href="/images/cs180/project-2/minion-aligned.png"><img src="/images/cs180/project-2/minion-aligned.png" width="1000" height="750" loading="lazy" alt="Minion: transformed"></a><figcaption>Minion: transformed</figcaption></figure>
+<figure><a href="/images/cs180/project-2/minion-snoopy-mask.png"><img src="/images/cs180/project-2/minion-snoopy-mask.png" width="1000" height="750" loading="lazy" alt="Elliptical face mask"></a><figcaption>Elliptical face mask</figcaption></figure>
+</div>
+<div class="p2-grid p2-cols-1">
+<figure><a href="/images/cs180/project-2/minion-snoopy.png"><img src="/images/cs180/project-2/minion-snoopy.png" width="1000" height="750" loading="lazy" alt="Minion + Snoopy"></a><figcaption>Minion + Snoopy</figcaption></figure>
+</div>
+<p>The goggles extend above Snoopy’s head, and the blend has a soft boundary around the face. Snoopy’s ears and body remain visible. Both custom blends use curved masks.</p>
+</section>
+<section id="reflection"><h2>What I learned</h2>
+<p>The most important thing I learned was the difference between Gaussian and Laplacian stacks. A Gaussian level contains the image after repeated blurring. A Laplacian level contains the detail lost between two Gaussian levels. Keeping the final blurred image lets me add the Laplacian levels back together to reconstruct the original. In the blends, I can control how each level crosses the mask boundary.</p>
+</section>
+</article></main>

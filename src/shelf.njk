@@ -25,10 +25,10 @@ permalink: /shelf/index.html
           <span class="book-count" id="book-count"></span>
         </div>
 
-        <div class="shelf-group-label" data-books-group="current">Currently Reading</div>
+        <h3 class="shelf-group-label" data-books-group="current">Currently Reading</h3>
         <div class="book-grid" id="books-current"></div>
 
-        <div class="shelf-group-label" data-books-group="finished">Finished</div>
+        <h3 class="shelf-group-label" data-books-group="finished">Finished</h3>
         <div class="book-grid" id="books-finished"></div>
       </div>
 
@@ -44,16 +44,16 @@ permalink: /shelf/index.html
           <span class="book-count" id="movie-count"></span>
         </div>
 
-        <div class="shelf-group-label movie-year">2026</div>
+        <h3 class="shelf-group-label movie-year">2026</h3>
         <div class="movie-grid" id="movies-2026"></div>
 
-        <div class="shelf-group-label movie-year">2025</div>
+        <h3 class="shelf-group-label movie-year">2025</h3>
         <div class="movie-grid" id="movies-2025"></div>
 
-        <div class="shelf-group-label movie-year">2024</div>
+        <h3 class="shelf-group-label movie-year">2024</h3>
         <div class="movie-grid" id="movies-2024"></div>
 
-        <div class="shelf-group-label movie-year">2023</div>
+        <h3 class="shelf-group-label movie-year">2023</h3>
         <div class="movie-grid" id="movies-2023"></div>
       </div>
 
@@ -78,7 +78,7 @@ permalink: /shelf/index.html
       <div class="modal">
         <button class="modal-close" onclick="closeModal()">×</button>
         <img class="modal-cover" id="modal-cover" src="" alt="">
-        <div class="modal-title" id="modal-title"></div>
+        <h2 class="modal-title" id="modal-title"></h2>
         <div class="modal-author" id="modal-author"></div>
         <div class="modal-review" id="modal-review"></div>
       </div>
@@ -89,7 +89,7 @@ permalink: /shelf/index.html
       <div class="modal">
         <button class="modal-close" onclick="closeMovieModal()">×</button>
         <img class="modal-cover" id="movie-modal-poster" src="" alt="">
-        <div class="modal-title" id="movie-modal-title"></div>
+        <h2 class="modal-title" id="movie-modal-title"></h2>
         <div class="modal-author" id="movie-modal-year"></div>
         <div class="modal-review" id="movie-modal-review"></div>
       </div>
@@ -504,7 +504,7 @@ permalink: /shelf/index.html
       const li = document.createElement('li');
       li.className = 'essay-item';
 
-      const titleDiv = document.createElement('div');
+      const titleDiv = document.createElement('h4');
       titleDiv.className = 'essay-title';
 
       const link = document.createElement('a');

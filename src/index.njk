@@ -13,21 +13,21 @@ permalink: /index.html
     <section class="about-section">
       <h1 class="section-title">About Me</h1>
 
-      <p class="label">//now//</p>
+      <h2 class="label">//now//</h2>
       <ul>
         {%- for item in about.now %}
         <li>{{ item.text }} <a href="{{ item.link }}" target="_blank">{{ item.linkText }}</a>{{ item.suffix }}</li>
         {%- endfor %}
       </ul>
 
-      <p class="label">//previously//</p>
+      <h2 class="label">//previously//</h2>
       <ul>
         {%- for item in about.previously %}
         <li>{{ item.text }} <a href="{{ item.link }}">{{ item.linkText }}</a>{% if item.link2 %}{{ item.suffix }} <a href="{{ item.link2 }}">{{ item.linkText2 }}</a>{% elif item.suffix %} {{ item.suffix }}{% endif %}</li>
         {%- endfor %}
       </ul>
 
-      <p class="label">//lore//</p>
+      <h2 class="label">//lore//</h2>
       <p class="lore-intro">{{ about.lore.intro }}</p>
       <ul>
         {%- for item in about.lore.items %}

@@ -30,7 +30,7 @@ permalink: /work/index.html
         <li>
           {% if item.url %}<a class="work-item-title" href="{{ item.url }}" target="_blank">{{ item.title }}</a>{% else %}<span class="work-item-title">{{ item.title }}</span>{% endif %}
           <div class="work-item-description">{{ item.description }}</div>
-          <div class="work-item-meta work-item-meta-uppercase">{{ item.source }}{% if item.year %} · {{ item.year }}{% endif %}</div>
+          <div class="work-item-meta">{{ item.source }}{% if item.year %} · {{ item.year }}{% endif %}</div>
         </li>
         {%- endfor %}
       </ul>
@@ -61,7 +61,7 @@ permalink: /work/index.html
 <div class="modal-overlay" id="experience-modal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="experience-modal-title">
     <button class="modal-close" id="experience-modal-close" type="button" onclick="closeExperienceModal()" aria-label="Close experience details">×</button>
-    <div class="modal-title" id="experience-modal-title"></div>
+    <h2 class="modal-title" id="experience-modal-title"></h2>
     <div class="modal-author" id="experience-modal-role"></div>
     <div class="modal-review" id="experience-modal-description"></div>
   </div>

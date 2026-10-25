@@ -1,6 +1,6 @@
-# Repository working agreements
+# Repository Working Agreements
 
-## Engineering principles
+## Engineering Principles
 
 - Treat the website as a coherent system rather than a sequence of isolated patches.
 - Prefer simple, compact architecture appropriate for this small Eleventy site.
@@ -11,7 +11,7 @@
 - Avoid speculative abstractions, unnecessary dependencies, and invented content.
 - Preserve existing behavior unless the requested change intentionally alters it.
 
-## Verification and communication
+## Verification and Communication
 
 - Run `npm run build` after structural, template, data, or styling changes.
 - Check responsive behavior when changing layout.
@@ -19,6 +19,7 @@
 
 ## Typography
 
+- Use title case for image captions, chart and table titles, table headers, and other short labels. Capitalize major words and both parts of hyphenated terms; keep short articles, conjunctions, and prepositions lowercase unless they begin or end the label or follow a colon. Omit final periods on labels. Keep descriptive body prose and image alt text in sentence case. Preserve titles and labels embedded in notebook outputs exactly as exported; do not regenerate figures just to change capitalization. Apply title case to webpage text and newly authored chart titles; do not change capitalization with CSS.
 - Keep the six text roles in the typography block at the start of `src/styles.css`.
 - Use H1 for page titles (16px), H2 for sections (14px), H3 for subsections (13px), and H4 for detail headings (12px). All four levels display in uppercase.
 - Use 13px body text and 11px supporting text. Supporting text includes captions, metadata, small labels, and code blocks; preserve its written case.

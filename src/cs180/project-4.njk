@@ -1,0 +1,126 @@
+---
+layout: base.njk
+title: Project 4 | CS 180 | Isabel Dong
+pageKey: cs180
+permalink: /cs180/project-4/index.html
+---
+<main class="page-content cs180-report cs180-technical-report fade-in">
+<a class="cs180-back-link" href="/cs180/">← All CS 180 Projects</a>
+<header class="cs180-report-header"><h1 class="page-title">Project 4: [Auto]Stitching Photo Mosaics</h1></header>
+<article class="cs180-report-body">
+<nav class="report-contents" aria-label="Report sections">
+  <div>Part A: <a href="/cs180/project-4/#part-a-1">A.1</a> · <a href="/cs180/project-4/#part-a-2">A.2</a> · <a href="/cs180/project-4/#part-a-3">A.3</a> · <a href="/cs180/project-4/#part-a-4">A.4</a></div>
+</nav>
+<h2 class="report-part" id="part-a">Part A: Image Warping and Mosaicing</h2>
+<p>I estimated homographies from manually selected points, implemented inverse warping with nearest-neighbor and bilinear interpolation, and blended overlapping photos into mosaics. The images show my bedroom, kitchen, and the view outside my apartment.</p>
+<section id="part-a-1"><h3>A.1: Shoot the Pictures</h3>
+<p>I took two overlapping views of each scene. For matching points, I used poster corners in the bedroom, details on the fridge in the kitchen, and building corners outside.</p>
+<h4>Bedroom</h4>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/a/bedroom_left.jpg"><img src="/images/cs180/project-4/a/bedroom_left.jpg" width="900" height="1200" loading="lazy" alt="Bedroom: left source image."></a><figcaption>Bedroom, Left</figcaption></figure>
+<figure><a href="/images/cs180/project-4/a/bedroom_right.jpg"><img src="/images/cs180/project-4/a/bedroom_right.jpg" width="900" height="1200" loading="lazy" alt="Bedroom: right source image."></a><figcaption>Bedroom, Right</figcaption></figure>
+</div>
+<h4>Kitchen</h4>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/a/kitchen_left.jpg"><img src="/images/cs180/project-4/a/kitchen_left.jpg" width="900" height="1200" loading="lazy" alt="Kitchen: left source image."></a><figcaption>Kitchen, Left</figcaption></figure>
+<figure><a href="/images/cs180/project-4/a/kitchen_right.jpg"><img src="/images/cs180/project-4/a/kitchen_right.jpg" width="900" height="1200" loading="lazy" alt="Kitchen: right source image."></a><figcaption>Kitchen, Right</figcaption></figure>
+</div>
+<h4>Outdoors</h4>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/a/outdoors_left.jpg"><img src="/images/cs180/project-4/a/outdoors_left.jpg" width="900" height="1200" loading="lazy" alt="Outdoors: left source image."></a><figcaption>Outdoors, Left</figcaption></figure>
+<figure><a href="/images/cs180/project-4/a/outdoors_right.jpg"><img src="/images/cs180/project-4/a/outdoors_right.jpg" width="900" height="1200" loading="lazy" alt="Outdoors: right source image."></a><figcaption>Outdoors, Right</figcaption></figure>
+</div>
+</section>
+<section id="part-a-2"><h3>A.2: Recover Homographies</h3>
+<p>I selected corresponding points with the <a href="https://cal-cs180.github.io/fa23/hw/proj3/tool.html">correspondence tool</a> and saved their (x, y) coordinates in JSON files. I applied the photos’ EXIF orientation when loading them so the arrays matched the upright images used for point selection.</p>
+<p>A homography maps a source point (x, y) to a destination point (x′, y′). I fix the bottom-right entry at 1, which leaves eight unknown entries:</p>
+<pre aria-label="Homography equation"><code>    [x′]   [h₁ h₂ h₃] [x]
+  w [y′] = [h₄ h₅ h₆] [y]
+    [ 1]   [h₇ h₈  1] [1]
+
+w = h₇x + h₈y + 1</code></pre>
+<p>Substituting w into the first two rows gives two linear equations per point pair:</p>
+<pre aria-label="Two rows of the homography linear system"><code>[x y 1 0 0 0 −xx′ −yx′]             [x′]
+[0 0 0 x y 1 −xy′ −yy′] h =         [y′]
+
+h = [h₁ h₂ h₃ h₄ h₅ h₆ h₇ h₈]ᵀ</code></pre>
+<p>I stack these rows into Ah = b. With n pairs, A has 2n rows and eight columns. More than four pairs give an overdetermined system, which I solve with <code>np.linalg.lstsq</code>.</p>
+<h4>Bedroom</h4>
+<figure><a href="/images/cs180/project-4/a/bedroom_correspondences.png"><img src="/images/cs180/project-4/a/bedroom_correspondences.png" width="1189" height="812" loading="lazy" alt="Bedroom: 10 corresponding point pairs, numbered in selection order."></a><figcaption>Bedroom: 10 Corresponding Point Pairs, Numbered in Selection Order</figcaption></figure>
+<p>Homography from the left image to the right image:</p>
+<pre><code>[[ 1.49422036e+00  2.32368398e-02 -1.99178483e+03]
+ [ 3.54829082e-01  1.35543482e+00 -7.25478647e+02]
+ [ 1.81716269e-04 -8.79873323e-06  1.00000000e+00]]</code></pre>
+<p>I initially used 12 pairs, including points on the bed and stuffed animal. The mean projection error was 20.08 pixels. Keeping the ten wall points reduced it to 3.94 pixels. This is consistent with parallax from camera movement: the nearer objects and the wall do not share the same mapping.</p>
+<h4>Kitchen</h4>
+<figure><a href="/images/cs180/project-4/a/kitchen_correspondences.png"><img src="/images/cs180/project-4/a/kitchen_correspondences.png" width="1189" height="812" loading="lazy" alt="Kitchen: 10 corresponding point pairs, numbered in selection order."></a><figcaption>Kitchen: 10 Corresponding Point Pairs, Numbered in Selection Order</figcaption></figure>
+<p>Homography from the left image to the right image:</p>
+<pre><code>[[ 1.48352454e+00  1.13840828e-01 -2.27450463e+03]
+ [ 2.14911730e-01  1.33667949e+00 -4.26220216e+02]
+ [ 1.47060454e-04  5.30656544e-06  1.00000000e+00]]</code></pre>
+<h4>Outdoors</h4>
+<figure><a href="/images/cs180/project-4/a/outdoors_correspondences.png"><img src="/images/cs180/project-4/a/outdoors_correspondences.png" width="1189" height="812" loading="lazy" alt="Outdoors: 8 corresponding point pairs, numbered in selection order."></a><figcaption>Outdoors: 8 Corresponding Point Pairs, Numbered in Selection Order</figcaption></figure>
+<p>Homography from the left image to the right image:</p>
+<pre><code>[[ 1.67207849e+00 -2.04639720e-01 -1.87115438e+03]
+ [ 6.55156604e-01  1.06313001e+00 -6.37402509e+02]
+ [ 3.02983268e-04 -1.22509232e-04  1.00000000e+00]]</code></pre>
+<p>The eight points cover a small region around the buildings. Their fit does not establish accuracy across the sky or foreground.</p>
+<table><caption>Projection Error at the Selected Correspondences, in Original-Resolution Pixels</caption><thead><tr><th scope="col">Scene</th><th scope="col">Pairs</th><th scope="col">Mean Error</th><th scope="col">Maximum Error</th></tr></thead><tbody>
+<tr><th scope="row">Bedroom</th><td>10</td><td>3.94</td><td>7.19</td></tr>
+<tr><th scope="row">Kitchen</th><td>10</td><td>3.95</td><td>8.01</td></tr>
+<tr><th scope="row">Outdoors</th><td>8</td><td>2.33</td><td>4.55</td></tr>
+</tbody></table>
+</section>
+<section id="part-a-3"><h3>A.3: Warp the Images</h3>
+<p>I transform the four image corners with H, round the bounds outward, and create an output pixel grid. For each output pixel, I apply H⁻¹ and divide by the homogeneous coordinate to find its position in the source image. This inverse mapping avoids holes between forward-mapped source pixels. I keep a separate validity mask for pixels whose source coordinates fall inside the image.</p>
+<p>Nearest-neighbor interpolation rounds each valid source coordinate and copies that pixel. Bilinear interpolation uses the fractional distances dx and dy to weight the four neighboring pixels:</p>
+<pre aria-label="Bilinear interpolation equation"><code>I(x, y) = (1 − dx)(1 − dy) I(x₀, y₀)
+        + dx(1 − dy) I(x₁, y₀)
+        + (1 − dx)dy I(x₀, y₁)
+        + dx dy I(x₁, y₁)</code></pre>
+<p>I implemented both interpolation methods with NumPy. At the last row or column, I clamp the upper neighbor to the image boundary. Invalid output pixels remain black and have a false mask value.</p>
+<p>For rectification, I selected four object corners with Matplotlib’s <code>ginput</code> in clockwise order and mapped them to a rectangle defined by hand. These are the two original photos:</p>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/a/book.jpg"><img src="/images/cs180/project-4/a/book.jpg" width="900" height="1200" loading="lazy" alt="Book before rectification."></a><figcaption>Book Before Rectification</figcaption></figure>
+<figure><a href="/images/cs180/project-4/a/laptop.jpg"><img src="/images/cs180/project-4/a/laptop.jpg" width="900" height="1200" loading="lazy" alt="Laptop before rectification."></a><figcaption>Laptop Before Rectification</figcaption></figure>
+</div>
+<h4>Book Rectification</h4>
+<p>I mapped the four corners to a 600 × 900-pixel rectangle. The images below retain the full warped photo around the rectified surface.</p>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/a/book_nearest.jpg"><img src="/images/cs180/project-4/a/book_nearest.jpg" width="1457" height="2000" loading="lazy" alt="Book: nearest-neighbor interpolation."></a><figcaption>Book: Nearest-Neighbor Interpolation</figcaption></figure>
+<figure><a href="/images/cs180/project-4/a/book_bilinear.jpg"><img src="/images/cs180/project-4/a/book_bilinear.jpg" width="1457" height="2000" loading="lazy" alt="Book: bilinear interpolation."></a><figcaption>Book: Bilinear Interpolation</figcaption></figure>
+</div>
+<figure><a href="/images/cs180/project-4/a/book_interpolation_closeup.png"><img src="/images/cs180/project-4/a/book_interpolation_closeup.png" width="1189" height="192" loading="lazy" alt="Book detail: nearest neighbor on the left and bilinear on the right."></a><figcaption>Book Detail: Nearest Neighbor on the Left and Bilinear on the Right</figcaption></figure>
+<h4>Laptop Rectification</h4>
+<p>I mapped the four corners to a 900 × 600-pixel rectangle. The images below retain the full warped photo around the rectified surface.</p>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/a/laptop_nearest.jpg"><img src="/images/cs180/project-4/a/laptop_nearest.jpg" width="1870" height="1890" loading="lazy" alt="Laptop: nearest-neighbor interpolation."></a><figcaption>Laptop: Nearest-Neighbor Interpolation</figcaption></figure>
+<figure><a href="/images/cs180/project-4/a/laptop_bilinear.jpg"><img src="/images/cs180/project-4/a/laptop_bilinear.jpg" width="1870" height="1890" loading="lazy" alt="Laptop: bilinear interpolation."></a><figcaption>Laptop: Bilinear Interpolation</figcaption></figure>
+</div>
+<figure><a href="/images/cs180/project-4/a/laptop_interpolation_closeup.png"><img src="/images/cs180/project-4/a/laptop_interpolation_closeup.png" width="1189" height="427" loading="lazy" alt="Laptop detail: nearest neighbor on the left and bilinear on the right."></a><figcaption>Laptop Detail: Nearest Neighbor on the Left and Bilinear on the Right</figcaption></figure>
+<table><caption>Single-Run Warping Runtimes, Including Coordinate Mapping and Interpolation</caption><thead><tr><th scope="col">Image</th><th scope="col">Nearest Neighbor</th><th scope="col">Bilinear</th></tr></thead><tbody>
+<tr><th scope="row">Book</th><td>0.307 s</td><td>0.528 s</td></tr>
+<tr><th scope="row">Laptop</th><td>0.203 s</td><td>0.373 s</td></tr>
+</tbody></table>
+<p>Nearest neighbor was faster in both runs. Its text and sticker edges look more jagged in the close-ups. Bilinear interpolation gives smoother edges by averaging nearby pixels, with some loss of sharpness.</p>
+</section>
+<section id="part-a-4"><h3>A.4: Blend the Images Into a Mosaic</h3>
+<p>For each pair, I warp the left photo into the right photo’s coordinate system with bilinear interpolation. I compute a shared canvas that contains both images, then use the warped image’s offset to place it and its validity mask. The right image stays unwarped.</p>
+<p>I use the distance transform of each mask to set blending weights. Each mask has a one-pixel false border before the distance calculation, so the canvas edges count as image boundaries. A pixel farther from an image boundary receives more weight. If only one image covers a pixel, that image receives full weight.</p>
+<pre aria-label="Distance-weighted blending equation"><code>w_left  = d_left  / (d_left + d_right)
+w_right = d_right / (d_left + d_right)
+
+mosaic = w_left · left + w_right · right</code></pre>
+<p>Where both distances are zero, I leave the output black. The masks record valid image coverage separately from pixel color, so valid black pixels still contribute to the blend.</p>
+<h4>Bedroom Mosaic</h4>
+<figure><a href="/images/cs180/project-4/a/bedroom_mosaic.jpg"><img src="/images/cs180/project-4/a/bedroom_mosaic.jpg" width="1779" height="2000" loading="lazy" alt="Bedroom mosaic with distance-weighted blending."></a><figcaption>Bedroom Mosaic with Distance-Weighted Blending</figcaption></figure>
+<p>The wall posters align closely. The headband and stuffed animals have visible doubling, consistent with the depth differences that affected the original 12-point fit. Feathering softens the transition but cannot align those objects with the wall homography.</p>
+<h4>Kitchen Mosaic</h4>
+<figure><a href="/images/cs180/project-4/a/kitchen_mosaic.jpg"><img src="/images/cs180/project-4/a/kitchen_mosaic.jpg" width="2000" height="1995" loading="lazy" alt="Kitchen mosaic with distance-weighted blending."></a><figcaption>Kitchen Mosaic with Distance-Weighted Blending</figcaption></figure>
+<p>The fridge details align closely. The containers above the fridge show doubling, and there is a visible brightness difference near the cabinet transition. The homography was fitted to points on the fridge front.</p>
+<h4>Outdoors Mosaic</h4>
+<figure><a href="/images/cs180/project-4/a/outdoors_mosaic.jpg"><img src="/images/cs180/project-4/a/outdoors_mosaic.jpg" width="2000" height="1879" loading="lazy" alt="Outdoors mosaic with distance-weighted blending."></a><figcaption>Outdoors Mosaic with Distance-Weighted Blending</figcaption></figure>
+<p>The buildings join reasonably at this display size, but the left side stretches strongly. The selected points occupy a small part of the overlap, so the low error at those points does not establish a good fit across the full image. Foreground trees also have a different depth from the buildings.</p>
+</section>
+</article>
+</main>

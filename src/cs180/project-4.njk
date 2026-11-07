@@ -10,6 +10,7 @@ permalink: /cs180/project-4/index.html
 <article class="cs180-report-body">
 <nav class="report-contents" aria-label="Report sections">
   <div>Part A: <a href="/cs180/project-4/#part-a-1">A.1</a> · <a href="/cs180/project-4/#part-a-2">A.2</a> · <a href="/cs180/project-4/#part-a-3">A.3</a> · <a href="/cs180/project-4/#part-a-4">A.4</a></div>
+  <div>Part B: <a href="/cs180/project-4/#part-b-1">B.1</a> · <a href="/cs180/project-4/#part-b-2">B.2</a> · <a href="/cs180/project-4/#part-b-3">B.3</a> · <a href="/cs180/project-4/#part-b-4">B.4</a></div>
 </nav>
 <h2 class="report-part" id="part-a">Part A: Image Warping and Mosaicing</h2>
 <p>I estimated homographies from manually selected points, implemented inverse warping with nearest-neighbor and bilinear interpolation, and blended overlapping photos into mosaics. The images show my bedroom, kitchen, and the view outside my apartment.</p>
@@ -121,6 +122,105 @@ mosaic = w_left · left + w_right · right</code></pre>
 <h4>Outdoors Mosaic</h4>
 <figure><a href="/images/cs180/project-4/a/outdoors_mosaic.jpg"><img src="/images/cs180/project-4/a/outdoors_mosaic.jpg" width="2000" height="1879" loading="lazy" alt="Outdoors mosaic with distance-weighted blending."></a><figcaption>Outdoors Mosaic with Distance-Weighted Blending</figcaption></figure>
 <p>The buildings join reasonably at this display size, but the left side stretches strongly. The selected points occupy a small part of the overlap, so the low error at those points does not establish a good fit across the full image. Foreground trees also have a different depth from the buildings.</p>
+</section>
+<h2 class="report-part" id="part-b">Part B: Feature Matching for Autostitching</h2>
+<p>In Part A, I clicked corresponding points by hand to tell the program which locations showed the same scene detail. In Part B, the program finds those correspondences automatically. It first chooses candidate points in each image, describes the appearance around each point, compares those descriptions across images, and uses RANSAC to select matches that agree on a homography. That homography then goes through the warping and blending code from Part A.</p>
+<p>I used the same bedroom, kitchen, and outdoors image pairs. I resized each photo to 900 × 1200 pixels to reduce the cost of feature detection and matching.</p>
+<section id="part-b-1"><h3>B.1: Harris Corner Detection</h3>
+<p>A useful feature point has a recognizable neighborhood that can be found again in the other photo. Harris corner detection looks for locations where image intensity changes in two directions. Moving a small window across a flat wall changes little; moving along a straight edge can also change little. At a corner, movement in either direction changes the window’s appearance. This makes corners useful candidates for matching.</p>
+<p>I used the supplied Harris detector at a single scale on grayscale images. It computes a corner response at each pixel, then returns local maxima and excludes points within 20 pixels of the image boundary. These are candidate locations only: detecting a point in the left image does not yet identify its partner in the right image. The red overlays below show that the initial detections are dense in textured areas.</p>
+<p>Keeping every candidate would make later matching expensive. Keeping only the strongest responses could also concentrate points in a few textured regions. Adaptive non-maximal suppression (ANMS) favors strong points that have some space around them, so the selected features cover more of the image.</p>
+<p>For each corner i, I find the distance to the nearest corner j whose response satisfies fᵢ &lt; 0.9fⱼ, where f is the Harris response. This distance is the corner’s suppression radius. A point close to a sufficiently stronger corner gets a small radius; an isolated strong point gets a large one. A point with no sufficiently stronger neighbor receives an infinite radius. I rank the radii and keep the largest 500 independently in each image.</p>
+<p>The before-and-after plots show this reduction from roughly 25,000–27,000 candidates to 500 points per image.</p>
+<table><caption>Harris Corner Counts Before ANMS</caption><thead><tr><th scope="col">Scene</th><th scope="col">Left</th><th scope="col">Right</th></tr></thead><tbody>
+<tr><th scope="row">Bedroom</th><td>26,780</td><td>26,605</td></tr>
+<tr><th scope="row">Kitchen</th><td>26,888</td><td>27,082</td></tr>
+<tr><th scope="row">Outdoors</th><td>25,507</td><td>25,176</td></tr>
+</tbody></table>
+<h4>Bedroom</h4>
+<figure><a href="/images/cs180/project-4/b/bedroom_harris.png"><img src="/images/cs180/project-4/b/bedroom_harris.png" width="1189" height="812" loading="lazy" alt="Bedroom image pair with all detected Harris corners overlaid in red."></a><figcaption>Bedroom: Harris Corners Before ANMS</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/bedroom_anms.png"><img src="/images/cs180/project-4/b/bedroom_anms.png" width="1189" height="812" loading="lazy" alt="Bedroom image pair with the 500 corners selected by ANMS overlaid in red."></a><figcaption>Bedroom: 500 Corners per Image After ANMS</figcaption></figure>
+<h4>Kitchen</h4>
+<figure><a href="/images/cs180/project-4/b/kitchen_harris.png"><img src="/images/cs180/project-4/b/kitchen_harris.png" width="1189" height="812" loading="lazy" alt="Kitchen image pair with all detected Harris corners overlaid in red."></a><figcaption>Kitchen: Harris Corners Before ANMS</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/kitchen_anms.png"><img src="/images/cs180/project-4/b/kitchen_anms.png" width="1189" height="812" loading="lazy" alt="Kitchen image pair with the 500 corners selected by ANMS overlaid in red."></a><figcaption>Kitchen: 500 Corners per Image After ANMS</figcaption></figure>
+<h4>Outdoors</h4>
+<figure><a href="/images/cs180/project-4/b/outdoors_harris.png"><img src="/images/cs180/project-4/b/outdoors_harris.png" width="1189" height="812" loading="lazy" alt="Outdoors image pair with all detected Harris corners overlaid in red."></a><figcaption>Outdoors: Harris Corners Before ANMS</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/outdoors_anms.png"><img src="/images/cs180/project-4/b/outdoors_anms.png" width="1189" height="812" loading="lazy" alt="Outdoors image pair with the 500 corners selected by ANMS overlaid in red."></a><figcaption>Outdoors: 500 Corners per Image After ANMS</figcaption></figure>
+</section>
+<section id="part-b-2"><h3>B.2: Feature Descriptor Extraction</h3>
+<p>ANMS gives me point locations. To compare a point in one photo with points in the other, I also need a description of what surrounds it. A feature descriptor stores that local appearance as a small array of numbers. Points that show the same scene detail should have similar descriptors, even though their image coordinates differ.</p>
+<p>I blur each grayscale image with a Gaussian filter (σ = 2), then extract a 40 × 40 window around each selected corner. Sampling every fifth pixel near the center of each 5 × 5 block produces an axis-aligned 8 × 8 descriptor. The larger source window captures context around the corner; blurring before sampling reduces sensitivity to fine detail and small shifts. I keep the image axes fixed, so these descriptors do not compensate for rotation or changes in scale.</p>
+<p>I flatten the 8 × 8 patch to 64 values, subtract its mean, and divide by its standard deviation. Subtracting the mean removes a uniform brightness offset. Dividing by the standard deviation adjusts the contrast scale. This helps corresponding patches compare well under simple brightness and contrast differences between photos.</p>
+<pre aria-label="Descriptor normalization equation"><code>descriptor = (sampled patch − mean) / standard deviation</code></pre>
+<p>The function skips windows that cross the image boundary and nearly constant patches, whose standard deviations are too small for reliable division. It keeps each descriptor paired with its point coordinates. All six images retained 500 descriptors, each with mean zero and standard deviation one.</p>
+<p>Below, each top row shows four original 40 × 40 source windows; the bottom row shows their normalized 8 × 8 descriptors. Each column illustrates the conversion of one window into a descriptor.</p>
+<h4>Bedroom</h4>
+<figure><a href="/images/cs180/project-4/b/bedroom_descriptors_left.png"><img src="/images/cs180/project-4/b/bedroom_descriptors_left.png" width="1169" height="593" loading="lazy" alt="Four source windows from the bedroom left image above their normalized eight-by-eight descriptors."></a><figcaption>Bedroom, Left: Source Windows and Normalized Descriptors</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/bedroom_descriptors_right.png"><img src="/images/cs180/project-4/b/bedroom_descriptors_right.png" width="1169" height="593" loading="lazy" alt="Four source windows from the bedroom right image above their normalized eight-by-eight descriptors."></a><figcaption>Bedroom, Right: Source Windows and Normalized Descriptors</figcaption></figure>
+<h4>Kitchen</h4>
+<figure><a href="/images/cs180/project-4/b/kitchen_descriptors_left.png"><img src="/images/cs180/project-4/b/kitchen_descriptors_left.png" width="1169" height="593" loading="lazy" alt="Four source windows from the kitchen left image above their normalized eight-by-eight descriptors."></a><figcaption>Kitchen, Left: Source Windows and Normalized Descriptors</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/kitchen_descriptors_right.png"><img src="/images/cs180/project-4/b/kitchen_descriptors_right.png" width="1169" height="593" loading="lazy" alt="Four source windows from the kitchen right image above their normalized eight-by-eight descriptors."></a><figcaption>Kitchen, Right: Source Windows and Normalized Descriptors</figcaption></figure>
+<h4>Outdoors</h4>
+<figure><a href="/images/cs180/project-4/b/outdoors_descriptors_left.png"><img src="/images/cs180/project-4/b/outdoors_descriptors_left.png" width="1169" height="593" loading="lazy" alt="Four source windows from the outdoors left image above their normalized eight-by-eight descriptors."></a><figcaption>Outdoors, Left: Source Windows and Normalized Descriptors</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/outdoors_descriptors_right.png"><img src="/images/cs180/project-4/b/outdoors_descriptors_right.png" width="1169" height="593" loading="lazy" alt="Four source windows from the outdoors right image above their normalized eight-by-eight descriptors."></a><figcaption>Outdoors, Right: Source Windows and Normalized Descriptors</figcaption></figure>
+</section>
+<section id="part-b-3"><h3>B.3: Feature Matching</h3>
+<p>For each of the 500 descriptors in the left image, I compare its 64 values with every descriptor in the right image. I subtract corresponding values, square the differences, and sum them. This sum of squared differences (SSD) is small when two patches have similar normalized appearance. The right-image descriptor with the smallest SSD is the nearest neighbor.</p>
+<p>A nearest neighbor alone can be misleading: repeated patterns can give several candidates with similar scores. I therefore compare the best match with the second-best match. I accept the best candidate only when its SSD divided by the second-best candidate’s SSD is less than 0.5.</p>
+<pre aria-label="Nearest-neighbor ratio test"><code>ratio = SSD to best candidate / SSD to second-best candidate
+accept when ratio &lt; 0.5</code></pre>
+<p>For example, SSD values of 10 and 40 give a ratio of 0.25, so I keep the best match. Values of 10 and 12 give about 0.83, so I reject it: two candidates look almost equally plausible. A smaller ratio indicates a more distinct best candidate.</p>
+<p>The threshold applies to squared distances, so it corresponds to about 0.707 for ordinary Euclidean distances. RANSAC then checks which matches agree with a single homography.</p>
+<p>Each line in the plots below connects one accepted left-image point to its proposed right-image partner. The number of lines is smaller than 500 because many descriptors fail the ratio test.</p>
+<table><caption>Matches After the Nearest-Neighbor Ratio Test</caption><thead><tr><th scope="col">Scene</th><th scope="col">Matches</th></tr></thead><tbody>
+<tr><th scope="row">Bedroom</th><td>122</td></tr>
+<tr><th scope="row">Kitchen</th><td>76</td></tr>
+<tr><th scope="row">Outdoors</th><td>86</td></tr>
+</tbody></table>
+<h4>Bedroom</h4>
+<figure><a href="/images/cs180/project-4/b/bedroom_matches.png"><img src="/images/cs180/project-4/b/bedroom_matches.png" width="1141" height="790" loading="lazy" alt="Lines connect corresponding features in the bedroom pair after the ratio test."></a><figcaption>Bedroom: Matched Features Before RANSAC</figcaption></figure>
+<h4>Kitchen</h4>
+<figure><a href="/images/cs180/project-4/b/kitchen_matches.png"><img src="/images/cs180/project-4/b/kitchen_matches.png" width="1141" height="790" loading="lazy" alt="Lines connect corresponding features in the kitchen pair after the ratio test."></a><figcaption>Kitchen: Matched Features Before RANSAC</figcaption></figure>
+<h4>Outdoors</h4>
+<figure><a href="/images/cs180/project-4/b/outdoors_matches.png"><img src="/images/cs180/project-4/b/outdoors_matches.png" width="1141" height="790" loading="lazy" alt="Lines connect corresponding features in the outdoors pair after the ratio test."></a><figcaption>Outdoors: Matched Features Before RANSAC</figcaption></figure>
+</section>
+<section id="part-b-4"><h3>B.4: RANSAC for Robust Homography</h3>
+<p>The ratio test gives proposed correspondences, including some incorrect ones. Fitting a homography to all of them at once could let those errors distort the result. RANSAC (Random Sample Consensus) searches for a homography that a large group of matches supports.</p>
+<p>I implemented four-point RANSAC with 2,000 trials and a fixed random seed of 180. Each trial samples four matches without replacement and estimates a homography with <code>computeH</code>. Four point pairs provide the eight equations needed for the eight unknown homography entries, provided the points form a suitable configuration. The implementation skips samples with repeated destination points and estimates that are invalid or singular.</p>
+<p>I test each candidate homography against every proposed match. I project the left-image point into the right image and measure the Euclidean distance to its matched right-image point. A match with an error below 3 pixels is an inlier for that candidate. The other matches are outliers for that candidate.</p>
+<pre aria-label="RANSAC projection error"><code>predicted right point = H · left point, divided by its homogeneous coordinate
+error = distance(predicted right point, matched right point)
+inlier when error &lt; 3 pixels</code></pre>
+<p>I keep the candidate with the largest inlier set. I then refit the homography using all matches in that set, which gives an overdetermined least-squares fit as in Part A, and recompute the inlier mask with the fitted homography. Repeating the random trials gives the algorithm chances to draw four consistent matches despite the outliers.</p>
+<p>The table reports the final inlier counts and their mean projection errors after refitting. For example, the bedroom result retains 80 of the 122 proposed matches.</p>
+<table><caption>RANSAC Results at 900 × 1200 Resolution</caption><thead><tr><th scope="col">Scene</th><th scope="col">Matches</th><th scope="col">Inliers</th><th scope="col">Mean Inlier Error</th></tr></thead><tbody>
+<tr><th scope="row">Bedroom</th><td>122</td><td>80</td><td>1.27 px</td></tr>
+<tr><th scope="row">Kitchen</th><td>76</td><td>33</td><td>1.26 px</td></tr>
+<tr><th scope="row">Outdoors</th><td>86</td><td>45</td><td>1.42 px</td></tr>
+</tbody></table>
+<p>I pass the estimated homography to <code>stitch_images</code>, which reuses Part A’s bilinear warping, shared canvas, and distance-weighted blending. It warps the left photo into the right photo’s coordinates, places both images on a canvas large enough to contain them, and blends their overlap. The automatic part is the selection of correspondences and estimation of the homography.</p>
+<p>For each comparison below, the manual mosaic uses the clicked points from Part A, and the automatic mosaic uses the feature matches selected by RANSAC. Both use the same resized photos and blending code. I convert each original-resolution manual homography to the resized coordinate system with H_small = S H_original S⁻¹, where S scales pixel coordinates. This maps a resized source point back to original coordinates, applies the original homography, then scales the destination point down again.</p>
+<h4>Bedroom</h4>
+<figure><a href="/images/cs180/project-4/b/bedroom_inliers.png"><img src="/images/cs180/project-4/b/bedroom_inliers.png" width="1141" height="790" loading="lazy" alt="Lines connect the final RANSAC inlier matches in the bedroom pair."></a><figcaption>Bedroom: RANSAC Inlier Matches</figcaption></figure>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/b/bedroom_manual.png"><img src="/images/cs180/project-4/b/bedroom_manual.png" width="1493" height="1679" loading="lazy" alt="Bedroom mosaic using manually selected correspondences."></a><figcaption>Bedroom: Manual Mosaic</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/bedroom_automatic.png"><img src="/images/cs180/project-4/b/bedroom_automatic.png" width="1491" height="1644" loading="lazy" alt="Bedroom mosaic using automatically matched features and RANSAC."></a><figcaption>Bedroom: Automatic Mosaic</figcaption></figure>
+</div>
+<p>The wall posters align closely in both mosaics. The headband and stuffed animals still show doubling because the nearer objects and the wall have different depths.</p>
+<h4>Kitchen</h4>
+<figure><a href="/images/cs180/project-4/b/kitchen_inliers.png"><img src="/images/cs180/project-4/b/kitchen_inliers.png" width="1141" height="790" loading="lazy" alt="Lines connect the final RANSAC inlier matches in the kitchen pair."></a><figcaption>Kitchen: RANSAC Inlier Matches</figcaption></figure>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/b/kitchen_manual.png"><img src="/images/cs180/project-4/b/kitchen_manual.png" width="1577" height="1573" loading="lazy" alt="Kitchen mosaic using manually selected correspondences."></a><figcaption>Kitchen: Manual Mosaic</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/kitchen_automatic.png"><img src="/images/cs180/project-4/b/kitchen_automatic.png" width="1610" height="1614" loading="lazy" alt="Kitchen mosaic using automatically matched features and RANSAC."></a><figcaption>Kitchen: Automatic Mosaic</figcaption></figure>
+</div>
+<p>The fridge details align closely in both results. The containers above the fridge still show doubling, and a brightness difference remains near the cabinet transition.</p>
+<h4>Outdoors</h4>
+<figure><a href="/images/cs180/project-4/b/outdoors_inliers.png"><img src="/images/cs180/project-4/b/outdoors_inliers.png" width="1141" height="790" loading="lazy" alt="Lines connect the final RANSAC inlier matches in the outdoors pair."></a><figcaption>Outdoors: RANSAC Inlier Matches</figcaption></figure>
+<div class="report-grid report-cols-2">
+<figure><a href="/images/cs180/project-4/b/outdoors_manual.png"><img src="/images/cs180/project-4/b/outdoors_manual.png" width="2485" height="2334" loading="lazy" alt="Outdoors mosaic using manually selected correspondences."></a><figcaption>Outdoors: Manual Mosaic</figcaption></figure>
+<figure><a href="/images/cs180/project-4/b/outdoors_automatic.png"><img src="/images/cs180/project-4/b/outdoors_automatic.png" width="1615" height="1793" loading="lazy" alt="Outdoors mosaic using automatically matched features and RANSAC."></a><figcaption>Outdoors: Automatic Mosaic</figcaption></figure>
+</div>
+<p>The automatic result has much less stretching on the left than the manual result. The automatic matches cover more of the scene than the eight manually selected building points. Foreground trees can still show misalignment because of depth differences.</p>
 </section>
 </article>
 </main>
